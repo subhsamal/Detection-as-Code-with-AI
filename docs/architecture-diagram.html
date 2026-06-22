@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detection-as-Code-with-AI — Architecture</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117;
+    --surface: #161b27;
+    --border: rgba(255,255,255,0.08);
+    --text-primary: #e8eaf0;
+    --text-secondary: #8b90a0;
+    --text-muted: #555c70;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'SF Mono','Fira Code',monospace;
+    min-height: 100vh;
+    padding: 40px 24px 60px;
+  }
+  .page-title {
+    font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 6px;
+  }
+  .page-heading {
+    font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size: 28px; font-weight: 600;
+    color: var(--text-primary); margin-bottom: 6px; letter-spacing: -0.02em;
+  }
+  .page-heading span { color: #afa9ec; }
+  .page-sub {
+    font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size: 13px; color: var(--text-muted); margin-bottom: 36px;
+  }
+  .diagram-wrap { width: 100%; max-width: 1000px; margin: 0 auto; }
+  svg { display: block; width: 100%; height: auto; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    margin: 22px auto 0; padding: 18px 22px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; max-width: 1000px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-secondary);
+    font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  .phases {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin: 16px auto 0; max-width: 1000px;
+  }
+  .phase-badge {
+    font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size: 12px; padding: 6px 14px; border-radius: 6px; font-weight: 500;
+  }
+  .p1 { background:#1e1548; color:#afa9ec; border:1px solid #7f77dd; }
+  .p2 { background:#0a3d30; color:#5dcaa5; border:1px solid #1d9e75; }
+  .p3 { background:#2d1008; color:#f0997b; border:1px solid #993c1d; }
+
+  .callout {
+    max-width: 1000px; margin: 16px auto 0;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .callout-card {
+    padding: 18px 20px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  .callout-card h3 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .callout-card p  { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+  @media(max-width:600px){ .callout{grid-template-columns:1fr;} .page-heading{font-size:20px;} }
+</style>
+</head>
+<body>
+
+<p class="page-title">Architecture · Detection-as-Code-with-AI</p>
+<h1 class="page-heading">AI-Augmented D&amp;R Platform <span>with Agentic AI</span></h1>
+<p class="page-sub">Elastic SIEM · Authentik IdP · Pomerium IAP · n8n Orchestration · MCP Server · AI Agents</p>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 1000 760" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#555c70" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#7f77dd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="aa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#ba7517" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="at" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#1d9e75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#993556" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#378add" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<!-- ── platform envelope ── -->
+<rect x="10" y="90" width="980" height="600" rx="16"
+      fill="none" stroke="#1e2540" stroke-width="1" stroke-dasharray="6 4"/>
+<text x="28" y="112" fill="#2a3050"
+      font-family="-apple-system,sans-serif" font-size="11"
+      font-weight="500" letter-spacing="0.1em">DETECTION-AS-CODE-WITH-AI PLATFORM</text>
+
+<!-- ════════════════════════════════════
+     TOP: Threat intel  +  Authentik IdP
+════════════════════════════════════ -->
+
+<!-- Threat intel -->
+<rect x="30" y="22" width="200" height="54" rx="8"
+      fill="#2d1008" stroke="#993c1d" stroke-width="0.8"/>
+<text x="130" y="44" text-anchor="middle"
+      fill="#f0997b" font-family="-apple-system,sans-serif" font-size="12" font-weight="600">Threat intel feeds</text>
+<text x="130" y="62" text-anchor="middle"
+      fill="#7a4030" font-family="-apple-system,sans-serif" font-size="10">MITRE STIX · OTX · AlienVault</text>
+<line x1="130" y1="76" x2="130" y2="128"
+      stroke="#993c1d" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#aa)"/>
+
+<!-- Authentik IdP — distinct named box, pink -->
+<rect x="720" y="22" width="250" height="54" rx="8"
+      fill="#2d0a1a" stroke="#993556" stroke-width="0.8"/>
+<text x="845" y="40" text-anchor="middle"
+      fill="#ed93b1" font-family="-apple-system,sans-serif" font-size="12" font-weight="600">Authentik IdP</text>
+<text x="845" y="56" text-anchor="middle"
+      fill="#72243e" font-family="-apple-system,sans-serif" font-size="10">Users · groups · MFA · OIDC token issuer</text>
+<!-- label: "the passport office" -->
+<text x="845" y="72" text-anchor="middle"
+      fill="#4a1528" font-family="-apple-system,sans-serif" font-size="9" font-style="italic">— the passport office —</text>
+<!-- phase 2 badge -->
+<rect x="936" y="26" width="28" height="14" rx="3"
+      fill="#2d0a1a" stroke="#72243e" stroke-width="0.5"/>
+<text x="950" y="36" text-anchor="middle"
+      fill="#993556" font-family="-apple-system,sans-serif" font-size="8">p.2</text>
+
+<!-- Authentik → Pomerium OIDC arrow -->
+<line x1="845" y1="76" x2="845" y2="106"
+      stroke="#993556" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#ak)"/>
+<text x="858" y="94" fill="#72243e"
+      font-family="-apple-system,sans-serif" font-size="9">OIDC token</text>
+
+<!-- ════════════════════════════════════
+     POMERIUM IAP — its own distinct box
+════════════════════════════════════ -->
+<rect x="480" y="106" width="490" height="60" rx="10"
+      fill="#0a3d30" stroke="#1d9e75" stroke-width="0.8"/>
+<text x="725" y="128" text-anchor="middle"
+      fill="#5dcaa5" font-family="-apple-system,sans-serif" font-size="12" font-weight="600">Pomerium IAP</text>
+<text x="725" y="145" text-anchor="middle"
+      fill="#0f6e56" font-family="-apple-system,sans-serif" font-size="10">Bouncer at every door · policy.yaml in repo · allow / deny · logs every decision</text>
+<text x="725" y="159" text-anchor="middle"
+      fill="#085041" font-family="-apple-system,sans-serif" font-size="9" font-style="italic">— the bouncer —</text>
+<!-- phase 2 badge -->
+<rect x="936" y="110" width="28" height="14" rx="3"
+      fill="#0a3d30" stroke="#1d9e75" stroke-width="0.5"/>
+<text x="950" y="120" text-anchor="middle"
+      fill="#1d9e75" font-family="-apple-system,sans-serif" font-size="8">p.2</text>
+
+<!-- Pomerium protects: arrows down to Kibana, n8n, MCP (shown as label) -->
+<text x="725" y="182" text-anchor="middle"
+      fill="#0f6e56" font-family="-apple-system,sans-serif" font-size="9">↓ protects: Kibana · n8n dashboard · MCP admin</text>
+
+<!-- ════════════════════════════════════
+     ROW: Telemetry  +  Elastic SIEM
+════════════════════════════════════ -->
+
+<!-- Telemetry -->
+<rect x="30" y="128" width="200" height="96" rx="10"
+      fill="#0a3d30" stroke="#1d9e75" stroke-width="0.8"/>
+<text x="130" y="152" text-anchor="middle"
+      fill="#5dcaa5" font-family="-apple-system,sans-serif" font-size="12" font-weight="600">Telemetry &amp; access</text>
+<text x="130" y="170" text-anchor="middle"
+      fill="#0f6e56" font-family="-apple-system,sans-serif" font-size="10">Elastic Agent · EDR</text>
+<text x="130" y="186" text-anchor="middle"
+      fill="#0f6e56" font-family="-apple-system,sans-serif" font-size="10">Pomerium access logs</text>
+<text x="130" y="202" text-anchor="middle"
+      fill="#0f6e56" font-family="-apple-system,sans-serif" font-size="10">Authentik auth events</text>
+<text x="130" y="218" text-anchor="middle"
+      fill="#0f6e56" font-family="-apple-system,sans-serif" font-size="10">Simulators (auth · process)</text>
+<!-- phase 2 badge -->
+<rect x="32" y="210" width="28" height="14" rx="3"
+      fill="#0a3d30" stroke="#1d9e75" stroke-width="0.5"/>
+<text x="46" y="220" text-anchor="middle"
+      fill="#1d9e75" font-family="-apple-system,sans-serif" font-size="8">p.2</text>
+
+<!-- Telemetry → SIEM -->
+<line x1="230" y1="180" x2="268" y2="180"
+      stroke="#555c70" stroke-width="1" marker-end="url(#a0)"/>
+
+<!-- Elastic SIEM -->
+<rect x="268" y="128" width="200" height="96" rx="10"
+      fill="#0c2244" stroke="#378add" stroke-width="0.8"/>
+<text x="368" y="152" text-anchor="middle"
+      fill="#85b7eb" font-family="-apple-system,sans-serif" font-size="12" font-weight="600">Elastic SIEM</text>
+<text x="368" y="170" text-anchor="middle"
+      fill="#185fa5" font-family="-apple-system,sans-serif" font-size="10">Detections as code · ES|QL</text>
+<text x="368" y="186" text-anchor="middle"
+      fill="#185fa5" font-family="-apple-system,sans-serif" font-size="10">ATT&amp;CK coverage map</text>
+<text x="368" y="202" text-anchor="middle"
+      fill="#185fa5" font-family="-apple-system,sans-serif" font-size="10">Kibana dashboards</text>
+<text x="368" y="218" text-anchor="middle"
+      fill="#185fa5" font-family="-apple-system,sans-serif" font-size="10">mcp-audit-logs index</text>
+<!-- phase 1 badge -->
+<rect x="270" y="210" width="28" height="14" rx="3"
+      fill="#0c2244" stroke="#185fa5" stroke-width="0.5"/>
+<text x="284" y="220" text-anchor="middle"
+      fill="#378add" font-family="-apple-system,sans-serif" font-size="8">p.1</text>
+
+<!-- SIEM → n8n alert arrow -->
+<line x1="368" y1="224" x2="368" y2="272"
+      stroke="#ba7517" stroke-width="1" marker-end="url(#aa)"/>
+<text x="382" y="252" fill="#ba7517"
+      font-family="-apple-system,sans-serif" font-size="10">alert fired</text>
+
+<!-- Pomerium access logs → Telemetry (dashed teal) -->
+<path d="M480 136 Q360 136 360 134 Q340 130 230 175"
+      fill="none" stroke="#1d9e75" stroke-width="0.7"
+      stroke-dasharray="4 3" marker-end="url(#at)"/>
+<text x="340" y="126" fill="#085041"
+      font-family="-apple-system,sans-serif" font-size="9">access logs</text>
+
+<!-- ════════════════════════════════════
+     n8n
+════════════════════════════════════ -->
+<rect x="178" y="272" width="380" height="84" rx="10"
+      fill="#2d1f06" stroke="#ba7517" stroke-width="0.8"/>
+<text x="368" y="296" text-anchor="middle"
+      fill="#ef9f27" font-family="-apple-system,sans-serif" font-size="12" font-weight="600">n8n orchestration layer</text>
+<text x="368" y="314" text-anchor="middle"
+      fill="#7a5010" font-family="-apple-system,sans-serif" font-size="10">Simple: Jira ticket · Slack alert · VirusTotal enrichment  →  analyst</text>
+<text x="368" y="332" text-anchor="middle"
+      fill="#7a5010" font-family="-apple-system,sans-serif" font-size="10">Complex: reasoning required  →  hand off to AI agents via MCP</text>
+<!-- phase 1 badge -->
+<rect x="180" y="278" width="28" height="14" rx="3"
+      fill="#2d1f06" stroke="#ba7517" stroke-width="0.5"/>
+<text x="194" y="288" text-anchor="middle"
+      fill="#ba7517" font-family="-apple-system,sans-serif" font-size="8">p.1</text>
+
+<!-- simple → Jira/Slack -->
+<line x1="178" y1="310" x2="118" y2="310"
+      stroke="#555c70" stroke-width="1" marker-end="url(#a0)"/>
+<rect x="30" y="288" width="88" height="44" rx="8"
+      fill="#1e2130" stroke="#444" stroke-width="0.8"/>
+<text x="74" y="308" text-anchor="middle"
+      fill="#b4b2a9" font-family="-apple-system,sans-serif" font-size="11" font-weight="500">Jira / Slack</text>
+<text x="74" y="324" text-anchor="middle"
+      fill="#555c70" font-family="-apple-system,sans-serif" font-size="9">simple playbooks</text>
+
+<!-- complex → MCP -->
+<line x1="558" y1="310" x2="614" y2="310"
+      stroke="#7f77dd" stroke-width="1" marker-end="url(#ap)"/>
+<text x="582" y="302" fill="#534ab7"
+      font-family="-apple-system,sans-serif" font-size="9">complex</text>
+<text x="582" y="314" fill="#534ab7"
+      font-family="-apple-system,sans-serif" font-size="9">triage</text>
+
+<!-- ════════════════════════════════════
+     MCP SERVER + AGENTS (right column)
+════════════════════════════════════ -->
+<rect x="614" y="186" width="366" height="368" rx="12"
+      fill="#1e1548" stroke="#7f77dd" stroke-width="0.8"/>
+<text x="797" y="210" text-anchor="middle"
+      fill="#afa9ec" font-family="-apple-system,sans-serif" font-size="12" font-weight="600">MCP server — tool gateway</text>
+<text x="797" y="226" text-anchor="middle"
+      fill="#534ab7" font-family="-apple-system,sans-serif" font-size="10">scope_policy.py  ·  audit_log.py</text>
+
+<!-- Tool list -->
+<rect x="630" y="236" width="334" height="16" rx="4" fill="#13102e"/>
+<text x="642" y="247" fill="#7f77dd" font-family="'SF Mono',monospace" font-size="10">search_alerts</text>
+<rect x="630" y="256" width="334" height="16" rx="4" fill="#13102e"/>
+<text x="642" y="267" fill="#7f77dd" font-family="'SF Mono',monospace" font-size="10">run_esql</text>
+<rect x="630" y="276" width="334" height="16" rx="4" fill="#13102e"/>
+<text x="642" y="287" fill="#7f77dd" font-family="'SF Mono',monospace" font-size="10">get_coverage</text>
+<rect x="630" y="296" width="334" height="16" rx="4" fill="#13102e"/>
+<text x="642" y="307" fill="#7f77dd" font-family="'SF Mono',monospace" font-size="10">list_rules</text>
+<rect x="630" y="316" width="334" height="16" rx="4" fill="#13102e"/>
+<text x="642" y="327" fill="#7f77dd" font-family="'SF Mono',monospace" font-size="10">query_profile</text>
+
+<line x1="630" y1="340" x2="964" y2="340" stroke="#2a1f5a" stroke-width="0.6"/>
+
+<!-- Three agent boxes -->
+<!-- Co-pilot -->
+<rect x="630" y="350" width="96" height="64" rx="8"
+      fill="#110d30" stroke="#534ab7" stroke-width="0.6"/>
+<text x="678" y="370" text-anchor="middle"
+      fill="#afa9ec" font-family="-apple-system,sans-serif" font-size="11" font-weight="600">Co-pilot</text>
+<text x="678" y="386" text-anchor="middle"
+      fill="#3c3489" font-family="-apple-system,sans-serif" font-size="9">proposes rules</text>
+<text x="678" y="400" text-anchor="middle"
+      fill="#3c3489" font-family="-apple-system,sans-serif" font-size="9">+ queries</text>
+
+<!-- co-pilot → auditor -->
+<line x1="726" y1="382" x2="740" y2="382"
+      stroke="#7f77dd" stroke-width="0.8" marker-end="url(#ap)"/>
+
+<!-- Auditor -->
+<rect x="740" y="350" width="96" height="64" rx="8"
+      fill="#110d30" stroke="#534ab7" stroke-width="0.6"/>
+<text x="788" y="370" text-anchor="middle"
+      fill="#afa9ec" font-family="-apple-system,sans-serif" font-size="11" font-weight="600">Auditor</text>
+<text x="788" y="386" text-anchor="middle"
+      fill="#3c3489" font-family="-apple-system,sans-serif" font-size="9">integrity · perf</text>
+<text x="788" y="400" text-anchor="middle"
+      fill="#3c3489" font-family="-apple-system,sans-serif" font-size="9">· security risk</text>
+
+<!-- Triage agent -->
+<rect x="852" y="350" width="106" height="64" rx="8"
+      fill="#110d30" stroke="#534ab7" stroke-width="0.6"/>
+<text x="905" y="370" text-anchor="middle"
+      fill="#afa9ec" font-family="-apple-system,sans-serif" font-size="11" font-weight="600">Triage agent</text>
+<text x="905" y="386" text-anchor="middle"
+      fill="#3c3489" font-family="-apple-system,sans-serif" font-size="9">multi-step loop</text>
+<text x="905" y="400" text-anchor="middle"
+      fill="#3c3489" font-family="-apple-system,sans-serif" font-size="9">reasons + cites</text>
+
+<!-- redaction strip -->
+<rect x="630" y="424" width="328" height="32" rx="6"
+      fill="#0a0820" stroke="#2a1f5a" stroke-width="0.5"/>
+<text x="794" y="437" text-anchor="middle"
+      fill="#534ab7" font-family="-apple-system,sans-serif" font-size="10">redaction.py — PII stripped before AI boundary</text>
+<text x="794" y="450" text-anchor="middle"
+      fill="#3c3489" font-family="-apple-system,sans-serif" font-size="9">entities hashed · rehydrated in final output</text>
+
+<!-- phase 1 badge on MCP -->
+<rect x="616" y="192" width="28" height="14" rx="3"
+      fill="#1e1548" stroke="#534ab7" stroke-width="0.5"/>
+<text x="630" y="202" text-anchor="middle"
+      fill="#7f77dd" font-family="-apple-system,sans-serif" font-size="8">p.1</text>
+
+<!-- audit logs → Elastic SIEM (dashed blue) -->
+<path d="M614 230 Q560 230 560 180 Q560 160 468 160"
+      fill="none" stroke="#378add" stroke-width="0.8"
+      stroke-dasharray="5 3" marker-end="url(#ab)"/>
+<text x="524" y="172" fill="#185fa5"
+      font-family="-apple-system,sans-serif" font-size="9">tool-call audit logs</text>
+
+<!-- agent output → n8n (dashed amber loop) -->
+<path d="M797 554 Q797 590 558 590 Q490 590 490 356"
+      fill="none" stroke="#ba7517" stroke-width="0.8"
+      stroke-dasharray="5 3" marker-end="url(#aa)"/>
+<text x="650" y="608" fill="#7a5010"
+      font-family="-apple-system,sans-serif" font-size="9">agent output → n8n posts findings to analyst</text>
+
+<!-- ════════════════════════════════════
+     ANALYST
+════════════════════════════════════ -->
+<line x1="368" y1="356" x2="368" y2="470"
+      stroke="#555c70" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a0)"/>
+<rect x="258" y="470" width="220" height="48" rx="8"
+      fill="#1e2130" stroke="#444" stroke-width="0.8"/>
+<text x="368" y="491" text-anchor="middle"
+      fill="#b4b2a9" font-family="-apple-system,sans-serif" font-size="12" font-weight="600">Analyst (you)</text>
+<text x="368" y="508" text-anchor="middle"
+      fill="#555c70" font-family="-apple-system,sans-serif" font-size="10">reviews · approves · overrides</text>
+
+<!-- ════════════════════════════════════
+     CI/CD BAR
+════════════════════════════════════ -->
+<rect x="30" y="558" width="950" height="44" rx="8"
+      fill="#0e2208" stroke="#3b6d11" stroke-width="0.8"/>
+<text x="505" y="575" text-anchor="middle"
+      fill="#97c459" font-family="-apple-system,sans-serif" font-size="11" font-weight="600">.github/workflows/ci.yml</text>
+<text x="505" y="593" text-anchor="middle"
+      fill="#27500a" font-family="-apple-system,sans-serif" font-size="10">lint  →  co-pilot review  →  auditor check  →  human approval  →  deploy to Elastic</text>
+
+<!-- ════════════════════════════════════
+     COMPONENT LABELS (key design decision)
+════════════════════════════════════ -->
+<!-- Authentik ↔ Pomerium relationship label -->
+<text x="600" y="60" text-anchor="middle"
+      fill="#4a1528" font-family="-apple-system,sans-serif" font-size="10">Authentik issues the wristband.</text>
+<text x="600" y="74" text-anchor="middle"
+      fill="#4a1528" font-family="-apple-system,sans-serif" font-size="10">Pomerium checks it at every door.</text>
+
+</svg>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot" style="background:#993556"></span>Authentik IdP — passport office (phase 2)</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#1d9e75"></span>Pomerium IAP — bouncer at every door (phase 2)</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#378add"></span>Elastic SIEM · detection-as-code (phase 1)</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#ba7517"></span>n8n orchestration (phase 1)</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#7f77dd"></span>MCP server · AI agents (phase 1)</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#993c1d"></span>Threat intel pipeline (phase 3)</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#3b6d11"></span>CI/CD pipeline (phase 1)</div>
+</div>
+
+<!-- Phase badges -->
+<div class="phases">
+  <span class="phase-badge p1">Phase 1 — Core platform (weeks 1–2): Elastic · MCP server · AI agents · n8n · CI/CD</span>
+  <span class="phase-badge p2">Phase 2 — Zero-trust (week 3): Authentik IdP + Pomerium IAP · access logs into Elastic</span>
+  <span class="phase-badge p3">Phase 3 — Threat intel (week 4): STIX · OTX · coverage gap → AI-drafted rules</span>
+</div>
+
+<!-- Callouts -->
+<div class="callout">
+  <div class="callout-card" style="border-color:#993556">
+    <h3 style="color:#ed93b1">Authentik = the passport office</h3>
+    <p>Owns identity: creates users, manages groups, enforces MFA, and issues signed OIDC tokens. Knows who everyone is. Does not decide what they can access — that's Pomerium's job.</p>
+  </div>
+  <div class="callout-card" style="border-color:#1d9e75">
+    <h3 style="color:#5dcaa5">Pomerium = the bouncer at every door</h3>
+    <p>Trusts Authentik's wristband, then applies its own policy.yaml rules on every single request. Can deny access based on time, device, route — regardless of what Authentik said about identity. Policy lives in your repo as code.</p>
+  </div>
+  <div class="callout-card" style="border-color:#7f77dd">
+    <h3 style="color:#afa9ec">Two-model critic pattern</h3>
+    <p>Co-pilot proposes. Auditor independently reviews for architectural integrity, ES|QL query cost, and security risk — before any output reaches a human or the CI pipeline.</p>
+  </div>
+  <div class="callout-card" style="border-color:#378add">
+    <h3 style="color:#85b7eb">Agent behavior as a detection source</h3>
+    <p>Every MCP tool call is logged to Elasticsearch. Detection rules fire on anomalous agent behavior — prompt injection, out-of-scope tool calls, auditor pass rate spikes. The platform watches its own AI.</p>
+  </div>
+</div>
+
+</body>
+</html>
