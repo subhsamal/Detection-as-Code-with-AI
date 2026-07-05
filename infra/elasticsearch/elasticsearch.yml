@@ -1,0 +1,19 @@
+# Elasticsearch configuration
+# Detection-as-Code-with-AI — Phase 1
+
+cluster.name: detection-as-code
+node.name: elasticsearch
+
+# Network
+network.host: 0.0.0.0
+http.port: 9200
+
+# Discovery
+discovery.type: single-node
+
+# Security
+xpack.security.enabled: true
+xpack.security.http.ssl.enabled: false
+
+# Logging
+logger.level: WARN

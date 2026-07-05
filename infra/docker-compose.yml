@@ -1,0 +1,112 @@
+# Detection-as-Code-with-AI
+# Phase 1: Elastic Stack + n8n
+# Architecture: arm64 (Apple Silicon)
+
+services:
+
+  # ── Elasticsearch ──────────────────────────────────────────────────
+  # Core data store. All telemetry, alerts, and AI agent audit logs
+  # are indexed here. Detection rules run against this engine.
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION}
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=detection-as-code
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "${ES_PORT}:9200"
+    networks:
+      - detection_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  # ── Kibana ─────────────────────────────────────────────────────────
+  # Visual interface for Elastic. Dashboards, detection rule management,
+  # ATT&CK coverage heatmap, and ES|QL query runner.
+  # Protected by Pomerium IAP in phase 2.
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ES_VERSION}
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.security.enabled=true
+    volumes:
+      - kibana_data:/usr/share/kibana/data
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    ports:
+      - "${KIBANA_PORT}:5601"
+    networks:
+      - detection_network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"level\":\"available\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  # ── n8n ────────────────────────────────────────────────────────────
+  # Orchestration layer. Receives alerts from Elastic via webhook.
+  # Routes simple alerts to Jira/Slack directly.
+  # Routes complex triage to the MCP server AI agents.
+  # Protected by Pomerium IAP in phase 2.
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - N8N_HOST=localhost
+      - N8N_PORT=${N8N_PORT}
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:${N8N_PORT}/
+      - GENERIC_TIMEZONE=Asia/Kolkata
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/home/node/.n8n/workflows
+    ports:
+      - "${N8N_PORT}:5678"
+    networks:
+      - detection_network
+    restart: unless-stopped
+
+# ── Named volumes ───────────────────────────────────────────────────
+# Data persists across container restarts.
+# elasticsearch_data and kibana_data are excluded from git via .gitignore
+volumes:
+  elasticsearch_data:
+    driver: local
+  kibana_data:
+    driver: local
+  n8n_data:
+    driver: local
+
+# ── Network ─────────────────────────────────────────────────────────
+# All services talk to each other on this internal network.
+# Only the ports defined above are exposed to your Mac.
+networks:
+  detection_network:
+    driver: bridge

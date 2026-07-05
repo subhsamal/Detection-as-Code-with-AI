@@ -1,0 +1,21 @@
+# Kibana configuration
+# Detection-as-Code-with-AI — Phase 1
+
+server.host: "0.0.0.0"
+server.port: 5601
+server.name: "detection-as-code-kibana"
+
+# Elasticsearch connection
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.username: "elastic"
+elasticsearch.password: "${ELASTICSEARCH_PASSWORD}"
+
+# Security
+xpack.security.enabled: true
+
+# Logging
+logging.root.level: warn
+
+# Disable telemetry
+telemetry.enabled: false
+telemetry.optIn: false
