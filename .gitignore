@@ -1,0 +1,19 @@
+# Secrets
+.env
+*.env
+infra/.env
+telemetry/beyondcorp/authentik/authentik.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# Docker volumes
+infra/elasticsearch/data/
+infra/kibana/data/
