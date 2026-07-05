@@ -18,6 +18,9 @@ This is also a living portfolio — each module maps directly to skills that mat
 
 ## Architecture overview
 
+
+
+
 ![Architecture Diagram](docs/architecture-diagram.svg)
 
 ---
