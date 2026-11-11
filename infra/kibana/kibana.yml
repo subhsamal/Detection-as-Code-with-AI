@@ -7,11 +7,7 @@ server.name: "detection-as-code-kibana"
 
 # Elasticsearch connection
 elasticsearch.hosts: ["http://elasticsearch:9200"]
-elasticsearch.username: "elastic"
-elasticsearch.password: "${ELASTICSEARCH_PASSWORD}"
-
-# Security
-xpack.security.enabled: true
+elasticsearch.serviceAccountToken: "${KIBANA_SERVICE_ACCOUNT_TOKEN}"
 
 # Logging
 logging.root.level: warn

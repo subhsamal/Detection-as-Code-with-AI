@@ -1,8 +1,43 @@
 # Detection-as-Code-with-AI
 
-**A production-grade, AI-augmented Detection and Response platform built on open-source tools.**
+**Building a production-grade, AI-augmented Detection and Response platform using open-source tools.**
 
 Built by Subhadarshi Samal — Senior Detection and Response Engineer.
+
+---
+
+## Current implementation status
+
+The Docker infrastructure foundation is implemented. The closed-loop detection and AI workflows described below remain planned.
+
+Last verified locally: 11 November 2026.
+
+| Component | Current status | Evidence |
+|---|---|---|
+| Elasticsearch | ![Implemented](https://img.shields.io/badge/status-Implemented-brightgreen)<br>authenticated health check returned HTTP 200 and green cluster health | `infra/docker-compose.yml`, `infra/elasticsearch/elasticsearch.yml` |
+| Kibana | ![Implemented](https://img.shields.io/badge/status-Implemented-brightgreen)<br>service-account authentication working, container healthy, status API returned HTTP 200 and available | `infra/docker-compose.yml`, `infra/kibana/kibana.yml` |
+| n8n | ![Partial](https://img.shields.io/badge/status-Partial-yellow)<br>container running; alert routing and enrichment workflows planned | `infra/docker-compose.yml`; `n8n/workflows/` contains only `.gitkeep` |
+| Telemetry simulators | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `telemetry/simulators/` contains only `.gitkeep` |
+| Authentik and Pomerium | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `telemetry/beyondcorp/` |
+| Detection rules, tests, coverage map, deployment | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `detections/`; no `deploy.py` |
+| MCP tools, scope enforcement, audit logging | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `mcp-server/tools/` contains only `.gitkeep`; no server implementation |
+| Co-pilot, auditor, triage, redaction | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `agents/` |
+| Threat intelligence pipeline | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `threat-intel/` contains only `.gitkeep` |
+| Detection CI/CD | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `.github/workflows/` contains only `.gitkeep` |
+
+Kibana logged an Observability AI Assistant error because resolving the ELSER model requires a Platinum, Enterprise, or trial license. Its overall health remained available.
+
+These runtime observations describe the verified local environment; they do not establish production readiness.
+
+## Documentation
+
+The project separates design, build guidance, and implementation evidence:
+
+1. **Design and planning:** [Pre-build document pack](docs/project-documents.md) — technology choices, interfaces, index plans, and dependencies. [Platform design reference](docs/Detection-as-Code-with-AI.md) provides the broader project narrative.
+2. **Build guidance:** [Build manual](docs/BUILD-MANUAL.md) — implementation instructions and troubleshooting.
+3. **Implementation evidence:** [Implementation logs](docs/implementation-logs/) — session-level work, validation, and outstanding tasks. Start with the [P1-M1 Day 1 log](docs/implementation-logs/P1-M1_Day1_Implementation_Log.md).
+
+Documents record different points in the build. The Day 1 implementation log now includes token generation and validation, configuration hardening, recreation of all three containers, and verified runtime health results, while preserving the earlier chronological history.
 
 ---
 
@@ -18,6 +53,7 @@ This is also a living portfolio — each module maps directly to skills that mat
 
 ## Architecture overview
 
+Target architecture; see the status table for implemented components.
 
 
 
@@ -25,7 +61,9 @@ This is also a living portfolio — each module maps directly to skills that mat
 
 ---
 
-## Repository structure
+## Target Repository Structure (Planned)
+
+Target structure. Many listed scripts and workflow files do not exist yet; current placeholders are listed above.
 
 ```
 Detection-as-Code-with-AI/
@@ -40,63 +78,67 @@ Detection-as-Code-with-AI/
 │
 ├── telemetry/                    # Log sources and simulators
 │   ├── simulators/
-│   │   ├── auth_events.py
-│   │   └── process_events.py
+│   │   ├── auth_events.py (planned)
+│   │   └── process_events.py (planned)
 │   └── beyondcorp/
-│       └── pomerium.yml
-│   │   ├── authentik.yml
-│   │   ├── authentik-db.yml
+│       ├── pomerium.yml (planned)
+│       ├── authentik.yml (planned)
+│       └── authentik-db.yml (planned)
 │
 ├── detections/                   # Detection-as-code
 │   ├── rules/
-│   │   └── *.yml  (ES|QL rules with MITRE mapping)
+│   │   └── *.yml (planned)  (ES|QL rules with MITRE mapping)
 │   ├── tests/
 │   ├── coverage_map/
-│   └── deploy.py
+│   └── deploy.py (planned)
 │
 ├── mcp-server/                   # AI tool gateway
-│   ├── server.py
+│   ├── server.py (planned)
 │   ├── tools/
-│   │   └── elastic_tools.py
-│   ├── scope_policy.py
-│   └── audit_log.py
+│   │   └── elastic_tools.py (planned)
+│   ├── scope_policy.py (planned)
+│   └── audit_log.py (planned)
 │
 ├── agents/                       # AI agent roles
 │   ├── copilot/
-│   │   └── rule_copilot.py
+│   │   └── rule_copilot.py (planned)
 │   ├── auditor/
-│   │   └── rule_auditor.py
+│   │   └── rule_auditor.py (planned)
 │   ├── triage_agent/
-│   │   └── triage.py
+│   │   └── triage.py (planned)
 │   └── shared/
-│       └── redaction.py
+│       └── redaction.py (planned)
 │
 ├── threat-intel/                 # CTI pipeline
-│   ├── stix_ingest.py
-│   ├── ttp_mapper.py
-│   ├── gap_finder.py
-│   ├── draft_rule.py
-│   └── otx_feed.py
+│   ├── stix_ingest.py (planned)
+│   ├── ttp_mapper.py (planned)
+│   ├── gap_finder.py (planned)
+│   ├── draft_rule.py (planned)
+│   └── otx_feed.py (planned)
 │
 ├── n8n/                          # SOAR-equivalent workflows
 │   └── workflows/
-│       ├── alert_triage.json
-│       └── alert_enrich.json
+│       ├── alert_triage.json (planned)
+│       └── alert_enrich.json (planned)
 │
 └── .github/
     └── workflows/
-        └── ci.yml               # Lint → co-pilot → auditor → deploy
+        └── ci.yml (planned)               # Lint → co-pilot → auditor → deploy
 ```
 
 ---
 
 ## Component roles
 
+The following descriptions preserve the target design. Status labels distinguish implemented infrastructure from planned functionality.
+
 ### 1. `infra/` — Elastic stack
+
+**Status:** Infrastructure implemented; custom dashboards and ATT&CK heatmap planned.
 
 **What it is:** The data foundation. Elasticsearch stores all security telemetry, detection rule output, and AI agent audit logs. Kibana provides dashboards, the detection rules UI, and the ATT&CK coverage heatmap.
 
-**Why this approach:** The `elastic-start-local` Docker script gives a fully portable, expiry-free Elastic stack that anyone can clone and run in two commands. No cloud trial, no license expiry mid-demo. The entire platform runs on a MacBook.
+**Why this approach:** The current infrastructure uses `infra/docker-compose.yml` to run Elasticsearch, Kibana, and n8n with named volumes. The Compose stack is intended for local development; licensed Elastic features may require an appropriate license.
 
 **Key interfaces:**
 - Elasticsearch REST API (`localhost:9200`) — used by `detections/deploy.py`, `mcp-server/tools/elastic_tools.py`, and `mcp-server/audit_log.py`
@@ -107,6 +149,8 @@ Detection-as-Code-with-AI/
 ---
 
 ### 2. `telemetry/` — Log sources and synthetic simulators
+
+**Status:** Planned — not implemented.
 
 **What it is:** The raw security signal. Two components: Python simulators that generate realistic synthetic events (auth failures, process executions, lateral movement patterns), and a full zero-trust identity stack: Authentik as the identity provider (IdP) and Pomerium as the Identity-Aware Proxy (IAP). Authentik manages users, groups, MFA, and issues OIDC tokens. Pomerium trusts those tokens and enforces per-route access policy in front of Kibana, n8n, and the MCP server admin interface.
 
@@ -124,6 +168,8 @@ Detection-as-Code-with-AI/
 
 ### 3. `detections/` — Detection-as-code
 
+**Status:** Planned — not implemented.
+
 **What it is:** All detection logic lives as versioned YAML files in this directory. Each rule contains the ES|QL query, MITRE ATT&CK mapping (tactic, technique, subtechnique), severity, response guidance, and test cases. `deploy.py` pushes rules to the Elastic detection engine via REST API.
 
 **Why YAML + CI/CD:** Detection rules are code. They belong in version control with peer review, automated testing, and a deployment pipeline — the same standards applied to application code. This is the core "Detection-as-Code" practice, and it makes every rule change auditable and reversible.
@@ -131,7 +177,7 @@ Detection-as-Code-with-AI/
 **ATT&CK coverage map:** A `coverage_map/` folder tracks which MITRE techniques have detection coverage and which do not. This feeds directly into the threat intel pipeline (phase 3) and powers a Kibana heatmap dashboard.
 
 **Key interfaces:**
-- `deploy.py` calls the Elasticsearch detection rules API
+- `deploy.py` will call the Kibana detection rules API
 - CI pipeline (`ci.yml`) runs tests, calls the AI co-pilot and auditor, then runs deploy on merge
 
 **Role in the platform:** The detection layer. Every alert that flows into n8n and the AI agents originates from a rule in this directory.
@@ -139,6 +185,8 @@ Detection-as-Code-with-AI/
 ---
 
 ### 4. `mcp-server/` — AI tool gateway
+
+**Status:** Planned — not implemented.
 
 **What it is:** A Python MCP (Model Context Protocol) server that exposes a defined set of tools to AI agents. Every interaction an agent has with Elasticsearch, the detection rule library, or query profiling goes through this server — never directly.
 
@@ -167,6 +215,8 @@ Detection-as-Code-with-AI/
 ---
 
 ### 5. `agents/` — AI agent roles
+
+**Status:** Planned — not implemented.
 
 **What it is:** Three distinct AI agents, each with a scoped system prompt, a defined tool allowlist via the MCP server, and a specific job in the D&R workflow.
 
@@ -212,6 +262,8 @@ The key difference from a SOAR playbook: the triage agent reasons about what to 
 
 ### 6. `n8n/` — Orchestration layer
 
+**Status:** Container implemented; orchestration workflows and integrations planned.
+
 **What it is:** A self-hosted n8n instance running alongside the Elastic stack in Docker. n8n is the first receiver of fired alerts from Elastic and acts as a lightweight SOAR layer.
 
 **Why n8n alongside the MCP server:** These two components serve different purposes and should not be conflated. n8n handles deterministic, repeatable automation — create a Jira ticket, post to Slack, call VirusTotal for IP enrichment. These workflows do not require AI reasoning and should not consume AI API budget. The MCP server and AI agents handle non-deterministic, reasoning-required work — correlating events, assessing intent, writing triage notes.
@@ -228,6 +280,8 @@ The routing decision lives in n8n: if the alert severity and type match a simple
 
 ### 7. `threat-intel/` — CTI pipeline
 
+**Status:** Planned — not implemented.
+
 **What it is:** An automated pipeline that ingests structured threat intelligence, maps it to the platform's current ATT&CK detection coverage, identifies gaps, and uses the AI co-pilot to draft candidate detection rules for uncovered techniques.
 
 **Components:**
@@ -243,6 +297,8 @@ The routing decision lives in n8n: if the alert severity and type match a simple
 ---
 
 ### 8. `.github/workflows/ci.yml` — CI/CD pipeline
+
+**Status:** Planned — not implemented.
 
 **What it is:** The GitHub Actions pipeline that runs on every PR touching `detections/rules/`.
 
@@ -274,7 +330,7 @@ PR opened
 
 ---
 
-## The two signature capabilities
+## The two planned signature capabilities
 
 ### Two-model critic pattern
 
@@ -299,6 +355,8 @@ This turns the AI layer itself into a monitored, detectable attack surface — w
 ---
 
 ## Implementation roadmap
+
+Original target roadmap, preserved for reference. Week estimates are planning targets, not completion claims. The interview stories below describe the intended outcomes after implementation.
 
 ### Phase 1 — Core platform (weeks 1–2)
 
@@ -328,9 +386,7 @@ This turns the AI layer itself into a monitored, detectable attack surface — w
 
 | Task | Module | Deliverable |
 |---|---|---|
-| Pomerium IAP in Docker | `telemetry/beyondcorp/` | `pomerium.yml
-│   │   ├── authentik.yml
-│   │   ├── authentik-db.yml`, Kibana only accessible via IAP |
+| Pomerium IAP in Docker | `telemetry/beyondcorp/` | `pomerium.yml`, `authentik.yml`, and `authentik-db.yml` (planned); Kibana only accessible via IAP |
 | Access log ingestion | `telemetry/` | Pomerium logs indexed to `beyondcorp-access` Elastic index |
 | Access anomaly detection rule | `detections/rules/` | ES|QL rule firing on unusual access patterns to security tooling |
 
@@ -354,7 +410,7 @@ This turns the AI layer itself into a monitored, detectable attack surface — w
 
 ---
 
-## Skills demonstrated — mapped to interview requirements
+## Skills targeted by the completed platform
 
 | Platform capability | Skill demonstrated |
 |---|---|
@@ -371,37 +427,66 @@ This turns the AI layer itself into a monitored, detectable attack surface — w
 
 ---
 
-## Getting started (phase 1)
+## Getting started — implemented Docker stack
 
-Prerequisites: Docker Desktop on macOS with at least 8GB RAM allocated, Python 3.11+, a Claude API key.
+Prerequisites: Docker Desktop on macOS with at least 8 GB RAM allocated, Docker Compose, and Git. Python 3.11+ and a Claude API key are planned requirements for future modules; the current Docker stack does not require them.
+
+### Local environment
+
+Create `infra/.env` locally if it does not exist. No `.env.example` is currently provided. Configure these variables:
+
+| Variable | Purpose |
+|---|---|
+| `ES_VERSION` | Shared Elasticsearch and Kibana image version |
+| `ELASTIC_PASSWORD` | Initial Elasticsearch administrator password |
+| `ES_PORT` | Elasticsearch host port; use `9200` for the examples below |
+| `KIBANA_PORT` | Kibana host port; use `5601` |
+| `KIBANA_SERVICE_ACCOUNT_TOKEN` | Token for the `elastic/kibana` service account |
+| `N8N_PORT` | n8n port; use `5678` to match the current container port mapping |
+
+The n8n image uses `latest`; the inspected runtime version was 2.28.6. n8n uses built-in email-based user management. The last setup-status check indicated owner setup was still required; owner-account creation and interactive login have not been verified.
+
+### Kibana service-account authentication
+
+Kibana reads its token through this path:
+
+`infra/.env` → Compose `environment:` → container environment → `${KIBANA_SERVICE_ACCOUNT_TOKEN}` in `kibana.yml`.
+
+Generate a token for `elastic/kibana` using Elasticsearch's [create service account token API](https://www.elastic.co/docs/api/doc/elasticsearch/operation/operation-security-create-service-token):
+
+`POST /_security/service/elastic/kibana/credential/token/<unique-name>`
+
+Use an authenticated administrator with `manage_service_account`. Capture the returned token securely into `KIBANA_SERVICE_ACCOUNT_TOKEN` in `infra/.env`; do not print it or paste it into tracked files.
+
+`.gitignore` excludes `.env`, `*.env`, and `infra/.env`. Git ignore is not encryption. Do not share the environment file or unredacted Compose configuration output.
+
+Compose rejects a missing or empty token during configuration interpolation. The startup commands below assume Elasticsearch has already been bootstrapped and a valid token saved. A fresh installation needs a separate Elasticsearch-first bootstrap: use a temporary, nonempty interpolation placeholder while starting only Elasticsearch, then generate and save the real token before starting Kibana. The placeholder is not a usable credential.
+
+### Start and verify
+
+From the repository root, after configuring a valid token:
 
 ```bash
-# Clone the repo
-git clone https://github.com/subhsamal/Detection-as-Code-with-AI
-cd Detection-as-Code-with-AI
-
-# Start the Elastic stack
-cd infra
-docker compose up -d
-
-# Verify Elasticsearch is healthy
-curl -u elastic:$ES_PASSWORD http://localhost:9200/_cluster/health
-
-# Run the event simulators to populate Elastic with synthetic telemetry
-cd ../telemetry/simulators
-python auth_events.py
-python process_events.py
-
-# Deploy starter detection rules
-cd ../../detections
-python deploy.py
-
-# Start the MCP server
-cd ../mcp-server
-python server.py
-
-# Kibana is now available at http://localhost:5601
+docker compose --env-file infra/.env -f infra/docker-compose.yml up -d
+docker compose --env-file infra/.env -f infra/docker-compose.yml ps
 ```
+
+For the example ports above, verify Elasticsearch using an interactive password prompt:
+
+```bash
+curl --user elastic http://localhost:9200/_cluster/health
+curl http://localhost:5601/api/status
+```
+
+Use the current Elasticsearch password. Changing `ELASTIC_PASSWORD` in `.env` does not rotate a password already stored in the persistent Elasticsearch data volume.
+
+Kibana is available at `http://localhost:5601`; n8n is available at `http://localhost:5678` when those ports are configured. All three published ports bind only to `127.0.0.1`: Elasticsearch at `127.0.0.1:${ES_PORT}`, Kibana at `127.0.0.1:${KIBANA_PORT}`, and n8n at `127.0.0.1:${N8N_PORT}`. These localhost-only bindings were verified after container recreation; container-to-container communication remains on `detection_network`.
+
+The n8n workflow mount is `../n8n/workflows:/home/node/.n8n/workflows`, resolving relative to `infra/docker-compose.yml` to the repository's `n8n/workflows/` directory. The existing `n8n_data` named volume is preserved. No workflows are implemented or imported yet; mounting the directory does not automatically import workflows.
+
+### Planned setup steps
+
+Telemetry simulators, detection deployment, and the MCP server are not implemented. Commands referencing `auth_events.py`, `process_events.py`, `deploy.py`, or `server.py` are future steps, not runnable setup instructions for the current repository.
 
 ---
 
