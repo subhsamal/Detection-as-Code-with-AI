@@ -1,0 +1,13 @@
+FROM logs-p1-powershell-synthetic [metadata _id, _index, _version]
+| WHERE MV_CONCAT(event.category, ",") RLIKE "(.*,)?process(,.*)?"
+    AND MV_CONCAT(event.type, ",") RLIKE "(.*,)?start(,.*)?"
+    AND host.os.type == "windows"
+    AND TO_LOWER(process.name) IN ("powershell.exe", "pwsh.exe")
+    AND p1.analysis_version == "p1-ps-001-local-v1"
+    AND p1.lineage.verified == true
+    AND p1.lineage.office_origin == true
+    AND p1.lineage.path IN ("office_powershell", "office_cmd_powershell")
+    AND p1.powershell.encoded_command == true
+| WHERE p1.powershell.script_evidence.status IN ("download_only", "download_and_execute")
+| SORT @timestamp DESC
+| LIMIT 100

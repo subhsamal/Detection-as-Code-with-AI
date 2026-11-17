@@ -10,16 +10,16 @@ Built by Subhadarshi Samal — Senior Detection and Response Engineer.
 
 The Docker infrastructure foundation is implemented. The closed-loop detection and AI workflows described below remain planned.
 
-Last verified locally: 11 November 2026.
+Runtime evidence: 14 November 2026. Local code/security review and tests: 17 November 2026; no new live rollout performed during that review.
 
 | Component | Current status | Evidence |
 |---|---|---|
-| Elasticsearch | ![Implemented](https://img.shields.io/badge/status-Implemented-brightgreen)<br>authenticated health check returned HTTP 200 and green cluster health | `infra/docker-compose.yml`, `infra/elasticsearch/elasticsearch.yml` |
+| Elasticsearch | ![Implemented](https://img.shields.io/badge/status-Implemented-brightgreen)<br>authenticated HTTPS; all primaries active; final lab status yellow only for two known list/item replicas | `infra/docker-compose.yml`, `infra/elasticsearch/elasticsearch.yml`; Day 2 log |
 | Kibana | ![Implemented](https://img.shields.io/badge/status-Implemented-brightgreen)<br>service-account authentication working, container healthy, status API returned HTTP 200 and available | `infra/docker-compose.yml`, `infra/kibana/kibana.yml` |
 | n8n | ![Partial](https://img.shields.io/badge/status-Partial-yellow)<br>container running; alert routing and enrichment workflows planned | `infra/docker-compose.yml`; `n8n/workflows/` contains only `.gitkeep` |
 | Telemetry simulators | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `telemetry/simulators/` contains only `.gitkeep` |
 | Authentik and Pomerium | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `telemetry/beyondcorp/` |
-| Detection rules, tests, coverage map, deployment | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `detections/`; no `deploy.py` |
+| Detection engineering | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | P1-PS-001 lab rule deployed, tested and disabled; 6 Medium/47 and 8 High/73 alerts, 15 exclusions and overlapping-run deduplication verified; production telemetry, coverage map and CI/CD remain planned |
 | MCP tools, scope enforcement, audit logging | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `mcp-server/tools/` contains only `.gitkeep`; no server implementation |
 | Co-pilot, auditor, triage, redaction | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `agents/` |
 | Threat intelligence pipeline | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `threat-intel/` contains only `.gitkeep` |
@@ -28,6 +28,8 @@ Last verified locally: 11 November 2026.
 Kibana logged an Observability AI Assistant error because resolving the ELSER model requires a Platinum, Enterprise, or trial license. Its overall health remained available.
 
 These runtime observations describe the verified local environment; they do not establish production readiness.
+
+Local detection development includes an [offline PowerShell evidence processor and tests](detections/processing/README.md) and [controlled runtime tools](detections/processing/RUNTIME_TOOLS.md). The lab retains 58 source records and 14 alerts. Two High alerts intentionally represent legitimate automation; the test does not establish production effectiveness. The rule is disabled with interval `5m`, `from: now-7m`, `to: now` (two-minute additional look-back). See [actual runtime evidence](detections/tests/P1-PS-001_Runtime_Validation.md).
 
 ## Documentation
 
@@ -429,7 +431,13 @@ Original target roadmap, preserved for reference. Week estimates are planning ta
 
 ## Getting started — implemented Docker stack
 
-Prerequisites: Docker Desktop on macOS with at least 8 GB RAM allocated, Docker Compose, and Git. Python 3.11+ and a Claude API key are planned requirements for future modules; the current Docker stack does not require them.
+Stack prerequisites: Docker Desktop on macOS with at least 8 GB RAM allocated, Docker Compose, and Git. Local detection tools/tests require Python 3.11+ and Ruby with its standard YAML/JSON libraries. A Claude API key is a planned requirement for future AI modules; the current stack and detection validation do not require one.
+
+### Day 2 security configuration — deployed and validated
+
+On 12 November 2026, the approved local rollout enabled Elasticsearch HTTPS and persistent Kibana saved-object encryption. TLS trust/hostname validation, Kibana availability and encryption readiness passed; n8n remained operational. Later runtime testing accepted yellow health only for the two documented list/item replicas, with all primaries active. Compose requires the existing stable `KIBANA_ENCRYPTION_KEY` and provisioned certificate files; a fresh checkout needs a separately approved bootstrap. The scoped detection identity and P1-PS-001 runtime validation are complete within the synthetic lab scope.
+
+See [Day 2 security preparation](docs/day2-security-preparation.md) for the configuration paths, proposed scoped identity, validation, and rollback. Certificate/private-key material belongs in ignored local storage; do not commit it. Use `https://localhost:9200` with `--cacert infra/certs/ca.crt` for Elasticsearch checks. Kibana's localhost browser endpoint remains HTTP.
 
 ### Local environment
 
@@ -442,9 +450,11 @@ Create `infra/.env` locally if it does not exist. No `.env.example` is currently
 | `ES_PORT` | Elasticsearch host port; use `9200` for the examples below |
 | `KIBANA_PORT` | Kibana host port; use `5601` |
 | `KIBANA_SERVICE_ACCOUNT_TOKEN` | Token for the `elastic/kibana` service account |
+| `KIBANA_ENCRYPTION_KEY` | Existing persistent saved-object key; preserve it and its secure backup |
+| `P1_DETECTION_PASSWORD` | Existing scoped operator password, used only by local validation tools; never passed to service containers |
 | `N8N_PORT` | n8n port; use `5678` to match the current container port mapping |
 
-The n8n image uses `latest`; the inspected runtime version was 2.28.6. n8n uses built-in email-based user management. The last setup-status check indicated owner setup was still required; owner-account creation and interactive login have not been verified.
+The n8n image uses `latest`; the previously inspected runtime version was 2.28.6. n8n uses built-in user management, with no legacy Basic Auth settings. Alert routing and enrichment workflows remain planned.
 
 ### Kibana service-account authentication
 
@@ -474,7 +484,7 @@ docker compose --env-file infra/.env -f infra/docker-compose.yml ps
 For the example ports above, verify Elasticsearch using an interactive password prompt:
 
 ```bash
-curl --user elastic http://localhost:9200/_cluster/health
+curl --cacert infra/certs/ca.crt --user elastic https://localhost:9200/_cluster/health
 curl http://localhost:5601/api/status
 ```
 

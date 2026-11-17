@@ -1,0 +1,66 @@
+{
+  "elasticsearch": {
+    "cluster": [
+      "manage_own_api_key"
+    ],
+    "indices": [
+      {
+        "names": [
+          "logs-p1-powershell-synthetic"
+        ],
+        "privileges": [
+          "read",
+          "view_index_metadata"
+        ]
+      },
+      {
+        "names": [
+          ".alerts-security.alerts-default",
+          ".lists-default",
+          ".items-default"
+        ],
+        "privileges": [
+          "manage",
+          "write",
+          "read",
+          "view_index_metadata"
+        ]
+      },
+      {
+        "names": [
+          ".internal.alerts-security.alerts-default-*"
+        ],
+        "privileges": [
+          "read",
+          "view_index_metadata"
+        ]
+      },
+      {
+        "names": [
+          ".preview.alerts-security.alerts-default",
+          ".internal.preview.alerts-security.alerts-default-*"
+        ],
+        "privileges": [
+          "read",
+          "view_index_metadata"
+        ]
+      }
+    ]
+  },
+  "kibana": [
+    {
+      "base": [],
+      "feature": {
+        "siem": [
+          "all"
+        ],
+        "indexPatterns": [
+          "all"
+        ]
+      },
+      "spaces": [
+        "default"
+      ]
+    }
+  ]
+}

