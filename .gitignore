@@ -17,3 +17,9 @@ __pycache__/
 # Docker volumes
 infra/elasticsearch/data/
 infra/kibana/data/
+
+# Local Day 2 TLS material (including private keys and generation archives)
+infra/certs/
+
+# Local-only recording plans and production materials
+/docs/recordings/

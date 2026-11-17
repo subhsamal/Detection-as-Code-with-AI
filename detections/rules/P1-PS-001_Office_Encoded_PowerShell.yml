@@ -1,0 +1,76 @@
+# Draft Kibana 8.13 create-rule body. Convert YAML to JSON; do not deploy without approval.
+rule_id: P1-PS-001
+name: Office-originated encoded PowerShell with download instructions
+description: >-
+  Detects supported download instructions in Office-originated encoded PowerShell.
+  Provisional Medium/47 for download-only; High/73 when the downloaded text feeds
+  execution. Requires trusted local preprocessing; does not confirm runtime success.
+type: esql
+language: esql
+version: 1
+enabled: false
+severity: medium
+risk_score: 47
+interval: 5m
+from: now-7m
+to: now
+max_signals: 100
+actions: []
+author:
+  - Detection-as-Code-with-AI
+tags:
+  - P1
+  - PowerShell
+  - Synthetic lab
+  - Provisional scoring
+false_positives:
+  - Authorized Office automation that downloads and dynamically executes script text.
+references:
+  - https://cert.europa.eu/publications/security-advisories/2019-021/
+  - https://www.elastic.co/guide/en/security/8.13/rules-api-create.html
+note: >-
+  Review original process records, decoded script and evidence references. Confirm
+  Office ancestry and whether download/run actions succeeded using available runtime
+  evidence. Do not execute decoded content. Scores remain provisional; no automatic
+  response or in-place severity escalation is configured.
+threat:
+  - framework: MITRE ATT&CK
+    tactic:
+      id: TA0002
+      name: Execution
+      reference: https://attack.mitre.org/tactics/TA0002/
+    technique:
+      - id: T1059
+        name: Command and Scripting Interpreter
+        reference: https://attack.mitre.org/techniques/T1059/
+        subtechnique:
+          - id: T1059.001
+            name: PowerShell
+            reference: https://attack.mitre.org/techniques/T1059/001/
+severity_mapping:
+  - field: p1.priority.severity
+    operator: equals
+    value: medium
+    severity: medium
+  - field: p1.priority.severity
+    operator: equals
+    value: high
+    severity: high
+risk_score_mapping:
+  - field: p1.priority.risk_score
+    operator: equals
+    value: ""
+query: |-
+  FROM logs-p1-powershell-synthetic [metadata _id, _index, _version]
+  | WHERE MV_CONCAT(event.category, ",") RLIKE "(.*,)?process(,.*)?"
+      AND MV_CONCAT(event.type, ",") RLIKE "(.*,)?start(,.*)?"
+      AND host.os.type == "windows"
+      AND TO_LOWER(process.name) IN ("powershell.exe", "pwsh.exe")
+      AND p1.analysis_version == "p1-ps-001-local-v1"
+      AND p1.lineage.verified == true
+      AND p1.lineage.office_origin == true
+      AND p1.lineage.path IN ("office_powershell", "office_cmd_powershell")
+      AND p1.powershell.encoded_command == true
+  | WHERE p1.powershell.script_evidence.status IN ("download_only", "download_and_execute")
+  | SORT @timestamp DESC
+  | LIMIT 100

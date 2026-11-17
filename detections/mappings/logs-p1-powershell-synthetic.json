@@ -1,0 +1,146 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "event": {
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "category": {
+            "type": "keyword"
+          },
+          "type": {
+            "type": "keyword"
+          },
+          "dataset": {
+            "type": "keyword"
+          }
+        }
+      },
+      "host": {
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "os": {
+            "properties": {
+              "type": {
+                "type": "keyword"
+              }
+            }
+          }
+        }
+      },
+      "process": {
+        "properties": {
+          "entity_id": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "keyword"
+          },
+          "pid": {
+            "type": "long"
+          },
+          "parent": {
+            "properties": {
+              "entity_id": {
+                "type": "keyword"
+              },
+              "name": {
+                "type": "keyword"
+              },
+              "pid": {
+                "type": "long"
+              }
+            }
+          },
+          "args": {
+            "type": "keyword",
+            "ignore_above": 1024
+          },
+          "command_line": {
+            "type": "wildcard"
+          }
+        }
+      },
+      "p1": {
+        "properties": {
+          "analysis_version": {
+            "type": "keyword"
+          },
+          "document_id": {
+            "type": "keyword"
+          },
+          "provisional_scores": {
+            "type": "boolean"
+          },
+          "lineage": {
+            "properties": {
+              "verified": {
+                "type": "boolean"
+              },
+              "office_origin": {
+                "type": "boolean"
+              },
+              "path": {
+                "type": "keyword"
+              }
+            }
+          },
+          "powershell": {
+            "properties": {
+              "encoded_command": {
+                "type": "boolean"
+              },
+              "decoded_script": {
+                "type": "wildcard"
+              },
+              "script_evidence": {
+                "properties": {
+                  "status": {
+                    "type": "keyword"
+                  },
+                  "reason": {
+                    "type": "keyword"
+                  },
+                  "source": {
+                    "type": "keyword"
+                  },
+                  "pattern": {
+                    "type": "keyword"
+                  }
+                }
+              }
+            }
+          },
+          "priority": {
+            "properties": {
+              "severity": {
+                "type": "keyword"
+              },
+              "risk_score": {
+                "type": "integer"
+              }
+            }
+          },
+          "evidence": {
+            "properties": {
+              "event_ids": {
+                "type": "keyword"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

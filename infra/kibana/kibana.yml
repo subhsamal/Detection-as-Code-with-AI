@@ -6,8 +6,13 @@ server.port: 5601
 server.name: "detection-as-code-kibana"
 
 # Elasticsearch connection
-elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.hosts: ["https://elasticsearch:9200"]
+elasticsearch.ssl.certificateAuthorities: ["/usr/share/kibana/config/certs/ca.crt"]
+elasticsearch.ssl.verificationMode: full
 elasticsearch.serviceAccountToken: "${KIBANA_SERVICE_ACCOUNT_TOKEN}"
+
+# Saved-object key must remain stable across container recreation.
+xpack.encryptedSavedObjects.encryptionKey: "${KIBANA_ENCRYPTION_KEY}"
 
 # Logging
 logging.root.level: warn
