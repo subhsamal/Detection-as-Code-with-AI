@@ -1,6 +1,6 @@
 # Offline GitHub Actions CI
 
-Prepared 18 November 2026. The workflow is implemented locally; no GitHub run or deployment is claimed before review and publication.
+Prepared 18 November 2026. The workflow passed its first [GitHub-hosted run](https://github.com/subhsamal/Detection-as-Code-with-AI/actions/runs/44337482225) on commit `e1333f203df8e1e25da814432b72f6778f4a66cb`. All three validation jobs and the completion gate succeeded. [PR #2](https://github.com/subhsamal/Detection-as-Code-with-AI/pull/2) targets `main` and awaits review; no merge or deployment was performed.
 
 `.github/workflows/ci.yml` runs on pull requests targeting `main` and pushes to `main`. Three jobs run independently:
 
