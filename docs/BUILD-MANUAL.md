@@ -327,8 +327,14 @@ docker compose ps
 All three should show `running` or `healthy`.
 
 **Verify Elasticsearch:**
+
+`--user elastic` prompts for the password without putting it in the command or
+shell history. Never append a password to the username. These HTTP examples
+describe the original pre-TLS setup; the current Day 2 lab requires HTTPS and
+verification with its private CA (see the Day 2 implementation log).
+
 ```bash
-curl -u elastic:YOUR_PASSWORD http://localhost:9200/_cluster/health
+curl --user elastic http://localhost:9200/_cluster/health
 ```
 
 Should return `"status":"green"` or `"status":"yellow"`.
@@ -361,19 +367,22 @@ docker compose down -v
 
 Run this once after Elasticsearch is healthy to create the indexes the platform writes to:
 
+These original setup examples also prompt for a password. They are write
+operations, not CI checks, and are not the approved Day 2 deployment procedure.
+
 ```bash
 # logs-auth index (synthetic auth events)
-curl -u elastic:YOUR_PASSWORD -X PUT http://localhost:9200/logs-auth \
+curl --user elastic -X PUT http://localhost:9200/logs-auth \
   -H 'Content-Type: application/json' \
   -d '{"settings": {"number_of_shards": 1, "number_of_replicas": 0}}'
 
 # logs-process index (synthetic process events)
-curl -u elastic:YOUR_PASSWORD -X PUT http://localhost:9200/logs-process \
+curl --user elastic -X PUT http://localhost:9200/logs-process \
   -H 'Content-Type: application/json' \
   -d '{"settings": {"number_of_shards": 1, "number_of_replicas": 0}}'
 
 # mcp-audit-logs index (AI agent tool calls)
-curl -u elastic:YOUR_PASSWORD -X PUT http://localhost:9200/mcp-audit-logs \
+curl --user elastic -X PUT http://localhost:9200/mcp-audit-logs \
   -H 'Content-Type: application/json' \
   -d '{"settings": {"number_of_shards": 1, "number_of_replicas": 0}}'
 ```

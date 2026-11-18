@@ -1,0 +1,8 @@
+# Reviewed 18 November 2026; see docs/github-actions-ci.md.
+# Exactly four historical curl-auth-user findings containing the literal
+# documentation placeholder YOUR_PASSWORD, not actual credential material.
+# Commit/file/rule/line fingerprints only: no current-file or blanket exceptions.
+388758e711371bad961799df71eb66d7e3228206:docs/BUILD-MANUAL.md:curl-auth-user:331
+388758e711371bad961799df71eb66d7e3228206:docs/BUILD-MANUAL.md:curl-auth-user:366
+388758e711371bad961799df71eb66d7e3228206:docs/BUILD-MANUAL.md:curl-auth-user:371
+388758e711371bad961799df71eb66d7e3228206:docs/BUILD-MANUAL.md:curl-auth-user:376
