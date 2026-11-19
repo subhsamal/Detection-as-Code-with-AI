@@ -1,6 +1,6 @@
 # Offline GitHub Actions CI
 
-Prepared 18 November 2026. The workflow passed its first [GitHub-hosted run](https://github.com/subhsamal/Detection-as-Code-with-AI/actions/runs/44337482225) on commit `e1333f203df8e1e25da814432b72f6778f4a66cb`. All three validation jobs and the completion gate succeeded. [PR #2](https://github.com/subhsamal/Detection-as-Code-with-AI/pull/2) targets `main` and awaits review; no merge or deployment was performed.
+Prepared 18 November; finalized 19 November 2026. [PR #2](https://github.com/subhsamal/Detection-as-Code-with-AI/pull/2) merged into `main` as `b598c2ceff16ab87fed9bc94e2a10473360ab93a`. All three validation jobs and the completion gate succeeded on the final PR revision and [post-merge main run](https://github.com/subhsamal/Detection-as-Code-with-AI/actions/runs/44450751375). See the [Day 3 implementation log](implementation-logs/P1-M1_Day3_Implementation_Log.md) for the 91-test result, remediation and run evidence. No deployment was performed.
 
 `.github/workflows/ci.yml` runs on pull requests targeting `main` and pushes to `main`. Three jobs run independently:
 
