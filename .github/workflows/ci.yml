@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  detection-tests:
+    name: Detection tests and contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11.14"
+      - uses: ruby/setup-ruby@341b6d4d1c7bdbe628940ab4e27cbdc9c97950cc # v1.340.0
+        with:
+          ruby-version: "3.3.10"
+      - name: Discover all automated tests (no live services)
+        run: python -B -m unittest discover -s detections/tests -p 'test_*.py' -v
+      - name: Offline detection contracts, not ES|QL engine compatibility
+        run: python -B scripts/ci/validate.py contracts
+
+  configuration-quality:
+    name: Configuration and code quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11.14"
+      - uses: ruby/setup-ruby@341b6d4d1c7bdbe628940ab4e27cbdc9c97950cc # v1.340.0
+        with:
+          ruby-version: "3.3.10"
+      - name: Install checksum-verified tools outside checkout
+        run: python -B scripts/ci/install_tools.py ruff actionlint compose --destination "$RUNNER_TEMP/p1-ci-tools"
+      - name: Strict configuration and Python syntax
+        run: python -B scripts/ci/validate.py config
+      - name: Compose config only, non-secret placeholders
+        run: python -B scripts/ci/validate.py compose --compose-bin "$RUNNER_TEMP/p1-ci-tools/compose"
+      - name: Ruff correctness and imports
+        run: '"$RUNNER_TEMP/p1-ci-tools/ruff" check --no-cache .'
+      - name: GitHub Actions syntax and expressions
+        # Optional shellcheck/pyflakes engines are outside this pinned dependency set.
+        run: '"$RUNNER_TEMP/p1-ci-tools/actionlint" -shellcheck= -pyflakes='
+      - name: Changed-line formatting
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            python -B scripts/ci/validate.py format
+          else
+            python -B scripts/ci/validate.py format --base "$BASE_SHA"
+          fi
+
+  secrets-artifacts:
+    name: Secrets and artifact policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11.14"
+      - name: Install checksum-verified scanner
+        run: python -B scripts/ci/install_tools.py gitleaks --destination "$RUNNER_TEMP/p1-ci-tools"
+      - name: Reject secret, recording and temporary artifact paths
+        run: python -B scripts/ci/validate.py artifacts
+      - name: Scan full checked-out Git history with redaction
+        run: python -B scripts/ci/secret_scan.py --mode git --gitleaks-bin "$RUNNER_TEMP/p1-ci-tools/gitleaks"
+      - name: Scan current publishable content with redaction
+        # Build an allowlisted tree, never scan the developer's ignored .env/certs.
+        run: python -B scripts/ci/secret_scan.py --gitleaks-bin "$RUNNER_TEMP/p1-ci-tools/gitleaks"
+
+  completion:
+    name: CI completion
+    needs: [detection-tests, configuration-quality, secrets-artifacts]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Require success from every required job
+        env:
+          DETECTION_RESULT: ${{ needs.detection-tests.result }}
+          CONFIGURATION_RESULT: ${{ needs.configuration-quality.result }}
+          SECRETS_RESULT: ${{ needs.secrets-artifacts.result }}
+        run: |
+          if [[ "$DETECTION_RESULT" != success || "$CONFIGURATION_RESULT" != success || "$SECRETS_RESULT" != success ]]; then
+            echo "FAIL | A required job failed, was cancelled, or was skipped"
+            exit 1
+          fi
+          echo "PASS | All required CI jobs succeeded"

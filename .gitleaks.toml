@@ -1,0 +1,12 @@
+title = "Detection-as-Code: default rules plus private-key detection"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "private-key-material"
+description = "Private key headers are forbidden in publishable content"
+regex = '''-----BEGIN (?:RSA |EC |OPENSSH |ENCRYPTED )?PRIVATE KEY-----'''
+
+# No fixture-directory exclusion or blanket allowlist. Reviewed historical-only
+# finding fingerprints live in .gitleaksignore; current content has no exceptions.

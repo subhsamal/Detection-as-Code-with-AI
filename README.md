@@ -23,7 +23,7 @@ Runtime evidence: 14 November 2026. Local code/security review and tests: 17 Nov
 | MCP tools, scope enforcement, audit logging | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `mcp-server/tools/` contains only `.gitkeep`; no server implementation |
 | Co-pilot, auditor, triage, redaction | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `agents/` |
 | Threat intelligence pipeline | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `threat-intel/` contains only `.gitkeep` |
-| Detection CI/CD | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `.github/workflows/` contains only `.gitkeep` |
+| Detection CI/CD | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | Offline CI validated locally and on GitHub; [PR #2](https://github.com/subhsamal/Detection-as-Code-with-AI/pull/2) awaits review. Deployment automation remains planned. See [CI validation and boundaries](docs/github-actions-ci.md). |
 
 Kibana logged an Observability AI Assistant error because resolving the ELSER model requires a Platinum, Enterprise, or trial license. Its overall health remained available.
 

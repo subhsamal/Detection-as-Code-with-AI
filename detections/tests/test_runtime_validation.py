@@ -3,6 +3,7 @@ from contextlib import redirect_stdout, redirect_stderr
 from copy import deepcopy
 from datetime import datetime, timezone
 import io
+import importlib
 import json
 from pathlib import Path
 import sys
@@ -11,9 +12,9 @@ from unittest.mock import Mock, patch
 
 PROCESSING = Path(__file__).resolve().parents[1] / 'processing'
 sys.path.insert(0, str(PROCESSING))
-import runtime_client as client
-import runtime_fixtures as fixtures
-import runtime_validation as runtime
+client = importlib.import_module('runtime_client')
+fixtures = importlib.import_module('runtime_fixtures')
+runtime = importlib.import_module('runtime_validation')
 
 
 class FixtureBuilderTests(unittest.TestCase):
