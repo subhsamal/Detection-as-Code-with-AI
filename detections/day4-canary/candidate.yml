@@ -1,0 +1,25 @@
+rule_id: P1-D4-CANARY-001
+name: P1 Day 4 disabled deployment canary
+description: Isolated synthetic rule for validating disabled configuration updates and rollback.
+type: esql
+language: esql
+version: 1
+enabled: false
+severity: low
+risk_score: 1
+interval: 6m
+from: now-7m
+to: now
+max_signals: 1
+actions: []
+author: []
+tags: []
+false_positives: []
+references: []
+note: Keep disabled. Use only the empty canary source in the dedicated space.
+threat: []
+severity_mapping: []
+risk_score_mapping: []
+query: |-
+  FROM logs-p1-day4-canary-synthetic [metadata _id, _index, _version]
+  | LIMIT 1

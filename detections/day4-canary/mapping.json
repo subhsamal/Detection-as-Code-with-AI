@@ -1,0 +1,8 @@
+{
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "@timestamp": {"type": "date"}
+    }
+  }
+}
