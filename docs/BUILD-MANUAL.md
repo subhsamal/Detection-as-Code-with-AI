@@ -339,10 +339,12 @@ curl --user elastic http://localhost:9200/_cluster/health
 
 Should return `"status":"green"` or `"status":"yellow"`.
 
-**Open Kibana:**
+**Open Kibana after the [Day 4 HTTPS cutover](day4-deployment-runbook.md#kibana-https-cutover-and-rollback):**
 ```
-http://localhost:5601
+https://localhost:5601
 ```
+
+Trust the public lab CA in the browser before signing in.
 
 Login with `elastic` and your `ELASTIC_PASSWORD`.
 

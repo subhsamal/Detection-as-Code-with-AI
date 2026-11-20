@@ -92,7 +92,7 @@ class Client:
             port = cfg['ES_PORT' if service == 'es' else 'KIBANA_PORT']
             if not port.isdecimal() or not 0 < int(port) < 65536:
                 raise Stop('Invalid local service port')
-            base = ('https' if service == 'es' else 'http') + '://127.0.0.1:' + port
+            base = 'https://127.0.0.1:' + port
             password = cfg['ELASTIC_PASSWORD' if admin else 'P1_DETECTION_PASSWORD']
             user = 'elastic' if admin else 'p1_detection_operator'
             headers = {'Authorization': 'Basic ' + base64.b64encode((user+':'+password).encode()).decode(),

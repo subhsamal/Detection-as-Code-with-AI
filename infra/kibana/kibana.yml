@@ -4,6 +4,10 @@
 server.host: "0.0.0.0"
 server.port: 5601
 server.name: "detection-as-code-kibana"
+server.ssl.enabled: true
+server.ssl.certificate: "/usr/share/kibana/config/certs/kibana-server.crt"
+server.ssl.key: "/usr/share/kibana/config/certs/kibana-server.key"
+server.ssl.supportedProtocols: ["TLSv1.2", "TLSv1.3"]
 
 # Elasticsearch connection
 elasticsearch.hosts: ["https://elasticsearch:9200"]

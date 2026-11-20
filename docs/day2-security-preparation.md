@@ -23,7 +23,7 @@ The Elasticsearch healthcheck expands its password inside the container using Co
 5. Generate the Kibana key directly into ignored local storage without stdout, shell-history, or command-argument exposure. Back it up securely. Never regenerate it on startup. Persisting the same key across recreation is essential for decrypting saved rule credentials.
 6. Verify certificate chain, expiry, SANs, matching private key, file ownership, and actual container readability. Kibana receives only the CA certificate. No global OS trust-store changes or verification bypasses are proposed.
 
-Only HTTP-layer TLS is included; this remains a single-node deployment. Browser-to-Kibana and n8n endpoints remain HTTP on loopback. Every Elasticsearch client must switch to HTTPS and explicit CA trust. Certificate renewal is a later approved operation before expiry.
+Day 2 enabled TLS on the single-node Elasticsearch HTTP layer. Browser-to-Kibana and n8n used HTTP on loopback at that milestone. See the [Day 4 runbook](day4-deployment-runbook.md) for the subsequent Kibana HTTPS preparation. Every Elasticsearch client must switch to HTTPS and explicit CA trust. Certificate renewal is a later approved operation before expiry.
 
 ## Concrete generation commands — documentation only; do not execute before approval
 

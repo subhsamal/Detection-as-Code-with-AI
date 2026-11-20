@@ -441,7 +441,7 @@ python deploy.py
 cd ../mcp-server
 python server.py
 
-# Kibana is now available at http://localhost:5601
+# After the Day 4 HTTPS cutover, open https://localhost:5601 with the lab CA trusted.
 ```
 
 ---
