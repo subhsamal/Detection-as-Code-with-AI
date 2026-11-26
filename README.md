@@ -23,7 +23,7 @@ P1-PS-001 runtime evidence was recorded on 14 November 2026. The 20 November Day
 | MCP tools, scope enforcement, audit logging | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `mcp-server/tools/` contains only `.gitkeep`; no server implementation |
 | Co-pilot, auditor, triage, redaction | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `agents/` |
 | Threat intelligence pipeline | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `threat-intel/` contains only `.gitkeep` |
-| Controlled deployment | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | Commit-bound offline planner, connected read-only planner, and journaled fixed-canary engine. Canary apply and rollback passed mocked tests. Live canary validation remains pending. See the [Day 4 log](docs/implementation-logs/P1-M1_Day4_Implementation_Log.md). |
+| Controlled deployment | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | Commit-bound offline planner, connected read-only planner, and journaled fixed-canary engine. Live validation applied one change to the disabled canary, verified a no-op, and restored the baseline with a verified rollback receipt. See the [Day 4 log](docs/implementation-logs/P1-M1_Day4_Implementation_Log.md). |
 | Detection CI/CD | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | Offline CI merged through [PR #2](https://github.com/subhsamal/Detection-as-Code-with-AI/pull/2); 91 tests and all four hosted checks passed, including on main. Deployment automation remains planned. See [Day 3 evidence](docs/implementation-logs/P1-M1_Day3_Implementation_Log.md) and [validation boundaries](docs/github-actions-ci.md). |
 
 Kibana logged an Observability AI Assistant error because resolving the ELSER model requires a Platinum, Enterprise, or trial license. Its overall health remained available.
@@ -39,7 +39,7 @@ The project separates design, build guidance, and implementation evidence:
 1. **Design and planning:** [Pre-build document pack](docs/project-documents.md) — technology choices, interfaces, index plans, and dependencies. [Platform design reference](docs/Detection-as-Code-with-AI.md) provides the broader project narrative.
 2. **Build guidance:** [Build manual](docs/BUILD-MANUAL.md) — implementation instructions and troubleshooting.
 3. **Implementation evidence:** [Implementation logs](docs/implementation-logs/) — session-level work, validation, and outstanding tasks. Start with the [P1-M1 Day 1 log](docs/implementation-logs/P1-M1_Day1_Implementation_Log.md).
-4. **Controlled deployment:** [Day 4 planner, canary setup, and recovery runbook](docs/day4-deployment-runbook.md). Live canary validation requires separate approval.
+4. **Controlled deployment:** [Day 4 planner, canary setup, and recovery runbook](docs/day4-deployment-runbook.md). The completed disabled-canary validation is recorded in the Day 4 log. Any further live write requires separate approval.
 
 Documents record different points in the build. The Day 1 implementation log now includes token generation and validation, configuration hardening, recreation of all three containers, and verified runtime health results, while preserving the earlier chronological history.
 

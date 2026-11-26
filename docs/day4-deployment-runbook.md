@@ -144,7 +144,11 @@ requires a live response contract check before write support.
 
 This command is implemented and tested with mocked HTTP. Run it against the lab
 only after trusted Kibana HTTPS and the dedicated identity have been approved
-and provisioned. The 20 November 2026 cutover verified Kibana HTTPS. The dedicated reader and first planner request still require approval.
+and provisioned. The 20 November 2026 cutover verified Kibana HTTPS and the
+dedicated reader was provisioned. Its first live planner invocation blocked
+on a response field. The compatibility correction passed offline tests. The
+corrected default-space planner invocation was not repeated. The separate
+fixed-profile canary workflow passed live apply and rollback validation.
 
 ```sh
 approved_commit='<full-commit-sha>'
@@ -233,8 +237,14 @@ Stopping the writer, deleting the canary, and cleaning up any source or space
 require separate exact-resource approval. Preserve journal evidence.
 
 Mocked tests cover both routes, strict TLS context, writer selection, and
-the full journaled sequence. The deployed response shape and the effective
-writer privileges remain live prerequisites.
+the full journaled sequence. On 26 November 2026, independent readback
+confirmed the live rollback at revision 2, interval 5m, disabled, with no
+actions. The writer completed the canary change with Security All in the
+canary space and no Elasticsearch grants. The saved-receipt runner verified
+the original digest, converted the JSON target array to a tuple in memory,
+and preserved the digest and saved bytes. Use the same check if a future
+caller loads a receipt from JSON.
+[Day 4 verification evidence](implementation-logs/P1-M1_Day4_Implementation_Log.md#26-november-2026--final-read-only-rollback-and-preservation-verification)
 
 ## Future live write workflow
 
