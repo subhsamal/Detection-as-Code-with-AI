@@ -1,0 +1,2 @@
+FROM logs-p1-day4-canary-synthetic [metadata _id, _index, _version]
+| LIMIT 1

@@ -47,9 +47,9 @@ Both modes use existing credentials in ignored `infra/.env`, held in memory.
 Operator authentication reads rules, source data and alerts; the separate existing
 administrator is used only for role/key descriptors, health and execution-history
 inspection. These are narrow authorized operations using a broad setup account,
-not a claim of narrowly scoped administrator authentication. Ports must be local,
-the Elasticsearch CA must verify, redirects/proxies are refused, and `.env` must
-be restricted (0600). No key is created/decrypted/revoked by these modes. Public
+not a claim of narrowly scoped administrator authentication. Ports must be local, both Kibana and Elasticsearch must serve HTTPS verified by
+the lab CA, redirects/proxies are refused, and `.env` must be restricted (0600).
+Run these modes after the [Kibana HTTPS cutover](../../docs/day4-deployment-runbook.md#kibana-https-cutover-and-rollback). No key is created/decrypted/revoked by these modes. Public
 metadata still does not uniquely link the exact execution key; all active owner
 snapshots are compared and that limitation is reported.
 

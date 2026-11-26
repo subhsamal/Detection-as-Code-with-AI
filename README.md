@@ -10,19 +10,20 @@ Built by Subhadarshi Samal — Senior Detection and Response Engineer.
 
 The Docker infrastructure foundation is implemented. The closed-loop detection and AI workflows described below remain planned.
 
-Runtime evidence: 14 November 2026. Local code/security review and tests: 17 November 2026; no new live rollout performed during that review.
+P1-PS-001 runtime evidence was recorded on 14 November 2026. The 20 November Day 4 HTTPS cutover verified Kibana availability and preservation of the disabled rule, 14 alerts, and 58 source records.
 
 | Component | Current status | Evidence |
 |---|---|---|
 | Elasticsearch | ![Implemented](https://img.shields.io/badge/status-Implemented-brightgreen)<br>authenticated HTTPS; all primaries active; final lab status yellow only for two known list/item replicas | `infra/docker-compose.yml`, `infra/elasticsearch/elasticsearch.yml`; Day 2 log |
-| Kibana | ![Implemented](https://img.shields.io/badge/status-Implemented-brightgreen)<br>service-account authentication working, container healthy, status API returned HTTP 200 and available | `infra/docker-compose.yml`, `infra/kibana/kibana.yml` |
+| Kibana | ![Implemented](https://img.shields.io/badge/status-Implemented-brightgreen)<br>CA-verified HTTPS and service-account connectivity verified after the Day 4 cutover | `infra/docker-compose.yml`, `infra/kibana/kibana.yml` |
 | n8n | ![Partial](https://img.shields.io/badge/status-Partial-yellow)<br>container running; alert routing and enrichment workflows planned | `infra/docker-compose.yml`; `n8n/workflows/` contains only `.gitkeep` |
 | Telemetry simulators | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `telemetry/simulators/` contains only `.gitkeep` |
 | Authentik and Pomerium | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `telemetry/beyondcorp/` |
-| Detection engineering | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | P1-PS-001 lab rule deployed, tested and disabled; 6 Medium/47 and 8 High/73 alerts, 15 exclusions and overlapping-run deduplication verified; production telemetry, coverage map and CI/CD remain planned |
+| Detection engineering | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | P1-PS-001 lab rule deployed, tested and disabled; 6 Medium/47 and 8 High/73 alerts, 15 exclusions and overlapping-run deduplication verified; production telemetry and the coverage map remain planned |
 | MCP tools, scope enforcement, audit logging | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `mcp-server/tools/` contains only `.gitkeep`; no server implementation |
 | Co-pilot, auditor, triage, redaction | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `agents/` |
 | Threat intelligence pipeline | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `threat-intel/` contains only `.gitkeep` |
+| Controlled deployment | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | Commit-bound offline planner, connected read-only planner, and journaled fixed-canary engine. Live validation applied one change to the disabled canary, verified a no-op, and restored the baseline with a verified rollback receipt. See the [Day 4 log](docs/implementation-logs/P1-M1_Day4_Implementation_Log.md). |
 | Detection CI/CD | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | Offline CI merged through [PR #2](https://github.com/subhsamal/Detection-as-Code-with-AI/pull/2); 91 tests and all four hosted checks passed, including on main. Deployment automation remains planned. See [Day 3 evidence](docs/implementation-logs/P1-M1_Day3_Implementation_Log.md) and [validation boundaries](docs/github-actions-ci.md). |
 
 Kibana logged an Observability AI Assistant error because resolving the ELSER model requires a Platinum, Enterprise, or trial license. Its overall health remained available.
@@ -38,6 +39,7 @@ The project separates design, build guidance, and implementation evidence:
 1. **Design and planning:** [Pre-build document pack](docs/project-documents.md) — technology choices, interfaces, index plans, and dependencies. [Platform design reference](docs/Detection-as-Code-with-AI.md) provides the broader project narrative.
 2. **Build guidance:** [Build manual](docs/BUILD-MANUAL.md) — implementation instructions and troubleshooting.
 3. **Implementation evidence:** [Implementation logs](docs/implementation-logs/) — session-level work, validation, and outstanding tasks. Start with the [P1-M1 Day 1 log](docs/implementation-logs/P1-M1_Day1_Implementation_Log.md).
+4. **Controlled deployment:** [Day 4 planner, canary setup, and recovery runbook](docs/day4-deployment-runbook.md). The completed disabled-canary validation is recorded in the Day 4 log. Any further live write requires separate approval.
 
 Documents record different points in the build. The Day 1 implementation log now includes token generation and validation, configuration hardening, recreation of all three containers, and verified runtime health results, while preserving the earlier chronological history.
 
@@ -170,17 +172,17 @@ The following descriptions preserve the target design. Status labels distinguish
 
 ### 3. `detections/` — Detection-as-code
 
-**Status:** Planned — not implemented.
+**Status:** P1-PS-001 was validated with synthetic events and is disabled. The fixed canary deployment engine was tested with mocked HTTPS responses.
 
-**What it is:** All detection logic lives as versioned YAML files in this directory. Each rule contains the ES|QL query, MITRE ATT&CK mapping (tactic, technique, subtechnique), severity, response guidance, and test cases. `deploy.py` pushes rules to the Elastic detection engine via REST API.
+**What it is:** Detection rules and their ES|QL are versioned with tests and validation evidence. The Day 4 planner reads approved artifacts directly from Git, and the canary engine journals configuration changes and rollback.
 
 **Why YAML + CI/CD:** Detection rules are code. They belong in version control with peer review, automated testing, and a deployment pipeline — the same standards applied to application code. This is the core "Detection-as-Code" practice, and it makes every rule change auditable and reversible.
 
 **ATT&CK coverage map:** A `coverage_map/` folder tracks which MITRE techniques have detection coverage and which do not. This feeds directly into the threat intel pipeline (phase 3) and powers a Kibana heatmap dashboard.
 
 **Key interfaces:**
-- `deploy.py` will call the Kibana detection rules API
-- CI pipeline (`ci.yml`) runs tests, calls the AI co-pilot and auditor, then runs deploy on merge
+- The connected planner reads P1-PS-001 over verified HTTPS.
+- GitHub Actions runs offline checks. AI review and deployment-on-merge are roadmap items.
 
 **Role in the platform:** The detection layer. Every alert that flows into n8n and the AI agents originates from a rule in this directory.
 
@@ -300,9 +302,9 @@ The routing decision lives in n8n: if the alert severity and type match a simple
 
 ### 8. `.github/workflows/ci.yml` — CI/CD pipeline
 
-**Status:** Planned — not implemented.
+**Status:** Offline CI runs on PRs targeting `main` and pushes to `main`. The three validation jobs feed a completion gate. See [CI checks and boundaries](docs/github-actions-ci.md).
 
-**What it is:** The GitHub Actions pipeline that runs on every PR touching `detections/rules/`.
+The diagram below shows the planned AI review and deployment workflow.
 
 **Pipeline stages:**
 
@@ -437,7 +439,7 @@ Stack prerequisites: Docker Desktop on macOS with at least 8 GB RAM allocated, D
 
 On 12 November 2026, the approved local rollout enabled Elasticsearch HTTPS and persistent Kibana saved-object encryption. TLS trust/hostname validation, Kibana availability and encryption readiness passed; n8n remained operational. Later runtime testing accepted yellow health only for the two documented list/item replicas, with all primaries active. Compose requires the existing stable `KIBANA_ENCRYPTION_KEY` and provisioned certificate files; a fresh checkout needs a separately approved bootstrap. The scoped detection identity and P1-PS-001 runtime validation are complete within the synthetic lab scope.
 
-See [Day 2 security preparation](docs/day2-security-preparation.md) for the configuration paths, proposed scoped identity, validation, and rollback. Certificate/private-key material belongs in ignored local storage; do not commit it. Use `https://localhost:9200` with `--cacert infra/certs/ca.crt` for Elasticsearch checks. Kibana's localhost browser endpoint remains HTTP.
+See [Day 2 security preparation](docs/day2-security-preparation.md) for the configuration paths, proposed scoped identity, validation, and rollback. Certificate/private-key material belongs in ignored local storage; do not commit it. Use `https://localhost:9200` with `--cacert infra/certs/ca.crt` for Elasticsearch checks. Day 4 switched the local Kibana endpoint to CA-verified HTTPS and verified availability after the Kibana-only cutover. See the [cutover and rollback runbook](docs/day4-deployment-runbook.md).
 
 ### Local environment
 
@@ -474,6 +476,8 @@ Compose rejects a missing or empty token during configuration interpolation. The
 
 ### Start and verify
 
+A local Kibana server certificate and key are required by Compose. For a Day 2 lab upgrading in place, follow the [Kibana-only cutover](docs/day4-deployment-runbook.md#kibana-https-cutover-and-rollback).
+
 From the repository root, after configuring a valid token:
 
 ```bash
@@ -485,12 +489,12 @@ For the example ports above, verify Elasticsearch using an interactive password 
 
 ```bash
 curl --cacert infra/certs/ca.crt --user elastic https://localhost:9200/_cluster/health
-curl http://localhost:5601/api/status
+curl --cacert infra/certs/ca.crt https://127.0.0.1:5601/api/status
 ```
 
 Use the current Elasticsearch password. Changing `ELASTIC_PASSWORD` in `.env` does not rotate a password already stored in the persistent Elasticsearch data volume.
 
-Kibana is available at `http://localhost:5601`; n8n is available at `http://localhost:5678` when those ports are configured. All three published ports bind only to `127.0.0.1`: Elasticsearch at `127.0.0.1:${ES_PORT}`, Kibana at `127.0.0.1:${KIBANA_PORT}`, and n8n at `127.0.0.1:${N8N_PORT}`. These localhost-only bindings were verified after container recreation; container-to-container communication remains on `detection_network`.
+After the HTTPS cutover, open Kibana at `https://localhost:5601` with the lab CA trusted by the browser. n8n is available at `http://localhost:5678` when those ports are configured. All three published ports bind only to `127.0.0.1`: Elasticsearch at `127.0.0.1:${ES_PORT}`, Kibana at `127.0.0.1:${KIBANA_PORT}`, and n8n at `127.0.0.1:${N8N_PORT}`. These localhost-only bindings were verified after container recreation; container-to-container communication remains on `detection_network`.
 
 The n8n workflow mount is `../n8n/workflows:/home/node/.n8n/workflows`, resolving relative to `infra/docker-compose.yml` to the repository's `n8n/workflows/` directory. The existing `n8n_data` named volume is preserved. No workflows are implemented or imported yet; mounting the directory does not automatically import workflows.
 
