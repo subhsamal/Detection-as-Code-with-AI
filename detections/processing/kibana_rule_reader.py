@@ -14,6 +14,10 @@ METADATA = {
 }
 EMPTY_BEHAVIOR = {'exceptions_list', 'response_actions', 'related_integrations', 'required_fields'}
 
+RESPONSE_FIELDS = FIELDS | METADATA | EMPTY_BEHAVIOR | {
+    'immutable', 'setup', 'rule_source', 'output_index',
+}
+
 
 def rule_path(space, *, canary=False):
     require(isinstance(space, str) and re.fullmatch(r'[a-z0-9_-]+', space),
@@ -26,28 +30,26 @@ def rule_path(space, *, canary=False):
 
 
 class KibanaRuleReader:
-    def __init__(self, target, space, get, *, canary=False):
+    def __init__(self, target, space, get, *, canary=False, projection=None):
         self._path = rule_path(space, canary=canary)
         self.rule_id = CANARY_RULE_ID if canary else RULE_ID
         require(isinstance(target, str) and target, 'Missing target identity')
         self.target = (target, space)
         self._get = get
+        self._projection = project_rule if projection is None else projection
 
     def read(self, rule_id):
         require(rule_id == self.rule_id, 'Unsupported detection rule')
         status, body = self._get(self._path)
         # A 404 can also indicate a missing route or an incorrect space.
         require(status == 200, 'Kibana rule read did not return HTTP 200')
-        return project_rule(body, rule_id)
+        return self._projection(body, rule_id)
 
 
 def project_rule(body, rule_id):
     response = strict_json(body)
     require(isinstance(response, dict), 'Expected a rule object')
-    allowed = FIELDS | METADATA | EMPTY_BEHAVIOR | {
-        'immutable', 'setup', 'rule_source', 'output_index',
-    }
-    require(not (response.keys() - allowed), 'Unknown Kibana rule response fields')
+    require(not (response.keys() - RESPONSE_FIELDS), 'Unknown Kibana rule response fields')
     # Kibana 8.13 serializes the legacy output index with an empty default.
     # Only the default is compatible with the committed rule projection.
     require(response.get('output_index', '') == '', 'Unsupported output_index')

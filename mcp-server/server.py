@@ -1,9 +1,10 @@
-"""Local stdio entry point for the fake Elastic Security backend."""
+"""Local stdio entry point for the Elastic Security MCP server."""
 
 import argparse
 import json
 import logging
 import math
+from pathlib import Path
 import sys
 from time import monotonic
 from uuid import uuid4
@@ -22,10 +23,12 @@ from tools.security import (
 MAX_FRAME = 8 * 1024
 METHODS = {'initialize', 'notifications/initialized', 'ping', 'server/discover', 'tools/list', 'tools/call'}
 ERRORS = {'UNKNOWN_TOOL', 'INVALID_INPUT', 'DENIED_SCOPE', 'INVALID_CURSOR',
-          'NOT_FOUND', 'INVALID_RESPONSE', 'OUTPUT_LIMIT'}
+          'NOT_FOUND', 'INVALID_RESPONSE', 'OUTPUT_LIMIT', 'AUTHENTICATION_FAILED',
+          'AUTHORIZATION_FAILED', 'TLS_FAILURE', 'CREDENTIAL_UNAVAILABLE', 'BACKEND_UNAVAILABLE',
+          'BACKEND_TIMEOUT'}
 DESCRIPTIONS = {
-    RULE_TOOL: 'Return projected synthetic metadata for the approved detection rule.',
-    ALERT_TOOL: 'List projected synthetic alerts for the approved detection rule in a bounded UTC window.',
+    RULE_TOOL: 'Return projected metadata for the approved detection rule.',
+    ALERT_TOOL: 'List projected alerts for the approved detection rule in a bounded UTC window (synthetic mode only).',
 }
 
 
@@ -105,8 +108,8 @@ def build_server(backend, audit):
         if not record('START'):
             return error_result('AUDIT_UNAVAILABLE', request_id)
         try:
-            projected = tools.read(name, params.arguments, bounds)
-            result = CallToolResult(content=[TextContent(type='text', text='Synthetic result.')],
+            projected = await anyio.to_thread.run_sync(tools.read, name, params.arguments, bounds)
+            result = CallToolResult(content=[TextContent(type='text', text='Rule or alert metadata returned.')],
                                     structured_content=projected)
             require(len(result.model_dump_json(by_alias=True, exclude_unset=True).encode()) <= MAX_OUTPUT,
                     'OUTPUT_LIMIT')
@@ -120,7 +123,7 @@ def build_server(backend, audit):
             return error_result('AUDIT_UNAVAILABLE', request_id)
         return result
 
-    return Server('p1-elastic-security-fake', on_list_tools=list_tools, on_call_tool=call_tool)
+    return Server('p1-elastic-security', on_list_tools=list_tools, on_call_tool=call_tool)
 
 
 class Arguments(argparse.ArgumentParser):
@@ -128,8 +131,22 @@ class Arguments(argparse.ArgumentParser):
         raise Fault('INVALID_LAUNCH_ARGUMENTS')
 
 
-async def serve(audit_directory):
-    server = build_server(FakeBackend(), Audit(audit_directory))
+def select_backend(args):
+    settings = (args.ca_file, args.password_file, args.expected_uuid)
+    if args.backend == 'synthetic':
+        require(not args.keychain and all(value is None for value in settings), 'INVALID_LAUNCH_ARGUMENTS')
+        return FakeBackend()
+    require(args.ca_file and args.expected_uuid and args.keychain != bool(args.password_file),
+            'INVALID_LAUNCH_ARGUMENTS')
+    # The shared Day 4 modules live in the repository, above this stdio entry point.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from tools.kibana import KibanaBackend
+
+    return KibanaBackend(*settings, keychain=args.keychain)
+
+
+async def serve(audit_directory, backend):
+    server = build_server(backend, Audit(audit_directory))
     async with stdio_server(stdin=BoundedInput(sys.stdin.buffer)) as (reader, writer):
         await server.run(reader, writer, server.create_initialization_options())
 
@@ -139,8 +156,21 @@ def main():
     try:
         parser = Arguments(description=__doc__)
         parser.add_argument('--audit-directory', required=True)
+        parser.add_argument('--backend', choices=('synthetic', 'kibana'), default='synthetic')
+        parser.add_argument('--ca-file')
+        source = parser.add_mutually_exclusive_group()
+        source.add_argument('--password-file')
+        source.add_argument('--keychain', action='store_true')
+        parser.add_argument('--expected-uuid')
+        parser.add_argument('--keychain-ready-file', type=Path, help=argparse.SUPPRESS)
         args = parser.parse_args()
-        anyio.run(serve, args.audit_directory)
+        backend = select_backend(args)
+        if args.keychain_ready_file is not None:
+            require(args.backend == 'kibana' and args.keychain, 'INVALID_LAUNCH_ARGUMENTS')
+            backend.preauthorize_keychain()
+            with args.keychain_ready_file.open('x'):
+                pass
+        anyio.run(serve, args.audit_directory, backend)
     except Exception:
         print('MCP_STOPPED: invalid launch, input frame or transport failure', file=sys.stderr)
         return 1
