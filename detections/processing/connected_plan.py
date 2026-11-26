@@ -22,6 +22,8 @@ MAX_RESPONSE_BYTES = 1024 * 1024
 
 
 class _KibanaHTTPSConnection:
+    response_limit = MAX_RESPONSE_BYTES
+
     def __init__(self, origin, ca_file):
         url = urlsplit(origin)
         require(url.scheme == 'https' and
@@ -53,13 +55,16 @@ class _KibanaHTTPSConnection:
             require(status == 200, 'Unsupported Kibana HTTP response')
             require(response.headers.get_content_type() == 'application/json',
                     'Unsupported Kibana response media type')
-            body = response.read(MAX_RESPONSE_BYTES + 1)
-            require(len(body) <= MAX_RESPONSE_BYTES, 'Kibana response exceeds size limit')
+            limit = self.response_limit
+            body = response.read(limit + 1)
+            require(len(body) <= limit, 'Kibana response exceeds size limit')
             return status, body.decode('utf-8')
         except ssl.SSLCertVerificationError:
             raise ValidationError('Kibana TLS certificate or hostname verification failed') from None
         except ssl.SSLError:
             raise ValidationError('Kibana TLS handshake failed') from None
+        except TimeoutError:
+            raise ValidationError('Kibana HTTPS request timed out') from None
         except (OSError, HTTPException):
             raise ValidationError('Kibana HTTPS request failed') from None
         finally:

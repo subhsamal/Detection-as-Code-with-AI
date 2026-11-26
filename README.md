@@ -20,7 +20,7 @@ P1-PS-001 runtime evidence was recorded on 14 November 2026. The 20 November Day
 | Telemetry simulators | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `telemetry/simulators/` contains only `.gitkeep` |
 | Authentik and Pomerium | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `telemetry/beyondcorp/` |
 | Detection engineering | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | P1-PS-001 lab rule deployed, tested and disabled; 6 Medium/47 and 8 High/73 alerts, 15 exclusions and overlapping-run deduplication verified; production telemetry and the coverage map remain planned |
-| MCP tools, scope enforcement, audit logging | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `mcp-server/tools/` contains only `.gitkeep`; no server implementation |
+| MCP tools, scope enforcement, audit logging | Phase 1 offline | [Fake-backend stdio server](mcp-server/README.md) |
 | Co-pilot, auditor, triage, redaction | ![Planned](https://img.shields.io/badge/status-Planned-grey) | Placeholder directories under `agents/` |
 | Threat intelligence pipeline | ![Planned](https://img.shields.io/badge/status-Planned-grey) | `threat-intel/` contains only `.gitkeep` |
 | Controlled deployment | ![Partial](https://img.shields.io/badge/status-Partial-yellow) | Commit-bound offline planner, connected read-only planner, and journaled fixed-canary engine. Live validation applied one change to the disabled canary, verified a no-op, and restored the baseline with a verified rollback receipt. See the [Day 4 log](docs/implementation-logs/P1-M1_Day4_Implementation_Log.md). |
@@ -190,31 +190,9 @@ The following descriptions preserve the target design. Status labels distinguish
 
 ### 4. `mcp-server/` — AI tool gateway
 
-**Status:** Planned — not implemented.
+**Status:** Phase 1 implemented with synthetic fixtures over local stdio.
 
-**What it is:** A Python MCP (Model Context Protocol) server that exposes a defined set of tools to AI agents. Every interaction an agent has with Elasticsearch, the detection rule library, or query profiling goes through this server — never directly.
-
-**Why MCP:** MCP is the emerging standard for giving AI agents structured, auditable access to external systems. Building your own MCP server rather than using one-off Python functions means tool integrations are written once and any future agent can use them. It also means access can be scoped, logged, and monitored at a single point.
-
-**Tools exposed:**
-
-| Tool | What it does | Who can use it |
-|---|---|---|
-| `search_alerts` | Query recent alerts by severity, time, entity | Triage agent, co-pilot (read) |
-| `run_esql` | Execute an ES|QL query against the SIEM | All agents (read-only) |
-| `get_coverage` | Return ATT&CK technique coverage status | Co-pilot, auditor |
-| `list_rules` | List deployed detection rules | Co-pilot, auditor |
-| `query_profile` | Profile an ES|QL query for performance cost | Auditor only |
-
-**`scope_policy.py`:** Implements least-privilege for AI agents. Each agent role has an allowlist of tools it can call. A triage agent cannot call `query_profile`. An auditor cannot create or modify rules. The same zero-trust principle applied to human users, applied to AI agents.
-
-**`audit_log.py`:** Every tool call an agent makes is written as a structured JSON log entry to a dedicated Elasticsearch index (`mcp-audit-logs`). Fields include: agent role, tool name, arguments, response summary, timestamp, and latency. This is not optional telemetry — it is a first-class security data source.
-
-**Key interfaces:**
-- Exposes MCP protocol endpoints consumed by agents in `agents/`
-- Writes to Elasticsearch via REST API
-
-**Role in the platform:** The single controlled gateway between AI agents and the rest of the platform. It enforces scope, produces the audit trail, and makes the entire AI layer observable.
+`get_detection_rule` and `list_detection_alerts` are scoped to `P1-PS-001` in the `default` space and write sanitized audit records locally. See the [offline setup and test instructions](mcp-server/README.md) and the [Day 5 design](docs/day5-mcp-design.md) for the planned live read adapters.
 
 ---
 
@@ -372,8 +350,8 @@ Original target roadmap, preserved for reference. Week estimates are planning ta
 | Synthetic event simulators | `telemetry/simulators/` | `auth_events.py`, `process_events.py` indexing to Elastic |
 | 3 starter detection rules | `detections/rules/` | ES|QL YAML rules with MITRE mapping and test cases |
 | Rule deploy script | `detections/` | `deploy.py` pushing rules via Elastic REST API |
-| MCP server — 2 tools | `mcp-server/` | `search_alerts` and `run_esql` working end-to-end |
-| MCP audit logging | `mcp-server/` | `audit_log.py` writing tool calls to `mcp-audit-logs` index |
+| MCP server — 2 tools | `mcp-server/` | `get_detection_rule` and `list_detection_alerts` work with synthetic fixtures. Live read adapters are planned. |
+| MCP audit logging | `mcp-server/` | Sanitized local JSONL records are implemented. SIEM audit ingestion is planned. |
 | Triage agent | `agents/triage_agent/` | Multi-step loop, redaction, structured triage output |
 | Co-pilot (CI step) | `agents/copilot/` | Reviews rule PRs, posts structured comment |
 | Auditor (CI step) | `agents/auditor/` | Reviews co-pilot output, posts audit findings |
@@ -500,7 +478,7 @@ The n8n workflow mount is `../n8n/workflows:/home/node/.n8n/workflows`, resolvin
 
 ### Planned setup steps
 
-Telemetry simulators, detection deployment, and the MCP server are not implemented. Commands referencing `auth_events.py`, `process_events.py`, `deploy.py`, or `server.py` are future steps, not runnable setup instructions for the current repository.
+Use the [Phase 1 MCP instructions](mcp-server/README.md) to run the offline server. The legacy examples for `auth_events.py`, `process_events.py`, and `deploy.py` describe planned interfaces.
 
 ---
 
