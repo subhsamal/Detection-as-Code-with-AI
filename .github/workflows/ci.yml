@@ -40,6 +40,13 @@ jobs:
         run: python -B -m unittest discover -s detections/tests -p 'test_*.py' -v
       - name: Offline detection contracts, not ES|QL engine compatibility
         run: python -B scripts/ci/validate.py contracts
+      - name: Day 5 fake-backend MCP stdio tests
+        run: |
+          python -m venv "$RUNNER_TEMP/p1-mcp-venv"
+          "$RUNNER_TEMP/p1-mcp-venv/bin/python" -m pip --isolated --disable-pip-version-check install \
+            --no-input --require-hashes --only-binary=:all: --index-url https://pypi.org/simple \
+            -r mcp-server/requirements.lock
+          "$RUNNER_TEMP/p1-mcp-venv/bin/python" -B -m unittest discover -s mcp-server/tests -p 'test_*.py' -v
 
   configuration-quality:
     name: Configuration and code quality
